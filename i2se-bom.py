@@ -49,7 +49,15 @@ def sortRowsForCVS(s):
 
 #this is the sort function used for sorting the names within a group
 def sortDictNameByNumber(s):
-  return int(''.join(c for c in s['NAME'] if c.isdigit()))
+  count = 0
+  for c in s['NAME']:
+    if c.isdigit():
+      count += 1;
+
+  if count == 0:
+    return 0
+  else:
+    return int(''.join(c for c in s['NAME'] if c.isdigit()))
 
 #find all used keys that are used in a list of dictionaries
 def getKeysFromDictList(elements):
@@ -105,7 +113,7 @@ def usage():
   print "\t-c / --brd=\t\t specify eagle board file in commandline, otherwise you will be asked by a QT Dialog"
   print "\t-t / --type=\t\t specify the type ('value' or 'part' are valid values) of the output csv, default:part"
   print "\t"
-  print "\tspecial attributes for EAGLE parts:"
+  print "\tspecial attributes for EAGLE parts that are interpreted by this script:"
   print "\t\tEXCLUDEFROMBOM\t\tparts with this attribute set to a value other than blank will be excluded from the bom"
   print "\t\tDO_NOT_PLACE\t\tusually should be blank or 'yes' for instructing the manufacturer to leave this part unplaced"
   print "\t\tPROVIDED_BY\t\tspecify where the manufacturer gets the parts from"
