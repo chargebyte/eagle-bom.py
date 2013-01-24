@@ -1,10 +1,3 @@
-#PARTS with attribute "EXCLUDEFROMBOM" are not included in the bom
-
-#command line arguments:
-# 1st: filename of the board file for which you want to make a bom
-# 2nd: filename to write the bom as cvs to
-# 3rd: type of bom, can be "part" or "value", i.e. list all parts seperately or group them by value (if they have the same attributes)
-
 _debug = 0
 
 try:
@@ -107,7 +100,7 @@ def write_part_list(elements, filename):
 
 def usage():
   print "usage: "
-  print "\t-d\t\t debug the script"
+  print "\t-d\t\t debug the script (not used yet)"
   print "\t-h / --help\t\t print this help"
   print "\t-c / --csv=\t\t specify csv in commandline, otherwise you will be asked by a QT Dialog"
   print "\t-c / --brd=\t\t specify eagle board file in commandline, otherwise you will be asked by a QT Dialog"
@@ -146,10 +139,14 @@ def main(argv):
 
   app = QApplication(argv)
   if (not in_filename):
-    in_filename = str(QtGui.QFileDialog.getOpenFileName(None, 'Open Eagle Board file',''))
+    #in_filename = str(QtGui.QFileDialog.getOpenFileName(None, 'Open Eagle Board file',''))
+    usage()
+    sys.exit(2)
 
   if (not out_filename):
-    out_filename = str(QtGui.QFileDialog.getOpenFileName(None, 'Write CSV to',''))
+    #out_filename = str(QtGui.QFileDialog.getOpenFileName(None, 'Write CSV to',''))
+    usage()
+    sys.exit(2)
 
   if (not bom_type):
     print "defaulting to bom type 'part'"
