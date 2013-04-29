@@ -6,8 +6,6 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 import csv
-from PyQt4 import QtGui
-from PyQt4.QtGui import QApplication
 import sys
 from operator import itemgetter, attrgetter
 from itertools import groupby
@@ -100,10 +98,13 @@ def write_part_list(elements, filename):
 
 def usage():
   print("usage: ")
-  print("\t-d\t\t debug the script (not used yet)")
-  print("\t-h / --help\t\t print this help")
+  print("\tmandatory arguments")
   print("\t-c / --csv=\t\t specify csv in commandline, otherwise you will be asked by a QT Dialog")
   print("\t-b / --brd=\t\t specify eagle board file in commandline, otherwise you will be asked by a QT Dialog")
+  print("\t")
+  print("\toptional arguments")
+  print("\t-d\t\t debug the script (not used yet)")
+  print("\t-h / --help\t\t print this help")
   print("\t-t / --type=\t\t specify the type ('value' or 'part' are valid values) of the output csv, default:part")
   print("\t")
   print("\tspecial attributes for EAGLE parts that are interpreted by this script:")
@@ -137,14 +138,11 @@ def main(argv):
     elif opt in ("-t", "--type"):
       bom_type = arg
 
-  app = QApplication(argv)
   if (not in_filename):
-    #in_filename = str(QtGui.QFileDialog.getOpenFileName(None, 'Open Eagle Board file',''))
     usage()
     sys.exit(2)
 
   if (not out_filename):
-    #out_filename = str(QtGui.QFileDialog.getOpenFileName(None, 'Write CSV to',''))
     usage()
     sys.exit(2)
 
