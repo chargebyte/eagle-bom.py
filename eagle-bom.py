@@ -99,17 +99,17 @@ def write_part_list(elements, filename):
   return 0;
 
 def usage():
-  print "usage: "
-  print "\t-d\t\t debug the script (not used yet)"
-  print "\t-h / --help\t\t print this help"
-  print "\t-c / --csv=\t\t specify csv in commandline, otherwise you will be asked by a QT Dialog"
-  print "\t-c / --brd=\t\t specify eagle board file in commandline, otherwise you will be asked by a QT Dialog"
-  print "\t-t / --type=\t\t specify the type ('value' or 'part' are valid values) of the output csv, default:part"
-  print "\t"
-  print "\tspecial attributes for EAGLE parts that are interpreted by this script:"
-  print "\t\tEXCLUDEFROMBOM\t\tparts with this attribute set to a value other than blank will be excluded from the bom"
-  print "\t\tDO_NOT_PLACE\t\tusually should be blank or 'yes' for instructing the manufacturer to leave this part unplaced"
-  print "\t\tPROVIDED_BY\t\tspecify where the manufacturer gets the parts from"
+  print("usage: ")
+  print("\t-d\t\t debug the script (not used yet)")
+  print("\t-h / --help\t\t print this help")
+  print("\t-c / --csv=\t\t specify csv in commandline, otherwise you will be asked by a QT Dialog")
+  print("\t-c / --brd=\t\t specify eagle board file in commandline, otherwise you will be asked by a QT Dialog")
+  print("\t-t / --type=\t\t specify the type ('value' or 'part' are valid values) of the output csv, default:part")
+  print("\t")
+  print("\tspecial attributes for EAGLE parts that are interpreted by this script:")
+  print("\t\tEXCLUDEFROMBOM\t\tparts with this attribute set to a value other than blank will be excluded from the bom")
+  print("\t\tDO_NOT_PLACE\t\tusually should be blank or 'yes' for instructing the manufacturer to leave this part unplaced")
+  print("\t\tPROVIDED_BY\t\tspecify where the manufacturer gets the parts from")
 
 
 def main(argv):
@@ -149,7 +149,7 @@ def main(argv):
     sys.exit(2)
 
   if (not bom_type):
-    print "defaulting to bom type 'part'"
+    print("defaulting to bom type 'part'")
     bom_type = 'part'
 
   tree = ET.ElementTree(file=in_filename)
@@ -172,7 +172,7 @@ def main(argv):
       elements.append(element)
 
 
-  print "writing bom of type " + bom_type
+  print("writing bom of type " + bom_type)
   if (bom_type=='value'):
     write_value_list(elements, out_filename)
   elif (bom_type=='part'):

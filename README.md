@@ -1,9 +1,9 @@
 eagle-bom.py
 ============
 
-**This script is a replacement of the eagle upl that creates a bom.**
+**This script is a replacement of the eagle ulp that creates a bom.**
 
-- We wrote it to get better bill of materials than the eagle upl generates. Especially when you group the lines of your bom by part values the bundled ulp did not compare the attributes for each part. This could lead to loss of attributes. This can happen when you use 100nF capacitors at 3.3V and 50V in the same schematic and you use the attributes to specify the parameters of each part.
+- We wrote it to get better bill of materials than the eagle ulp generates. Especially when you group the lines of your bom by part values the bundled ulp did not compare the attributes for each part. This could lead to loss of attributes. This can happen when you use 100nF capacitors at 3.3V and 50V in the same schematic and you use the attributes to specify the parameters of each part.
 eagle-bom.py solves this problem by grouping only parts with identical sets of attributes.
 - Another point where an external tool for the creation of a bill of material is usefull is the automatic generation of the bom.
 
