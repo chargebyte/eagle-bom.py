@@ -103,7 +103,7 @@ def usage():
   print("\t-d\t\t debug the script (not used yet)")
   print("\t-h / --help\t\t print this help")
   print("\t-c / --csv=\t\t specify csv in commandline, otherwise you will be asked by a QT Dialog")
-  print("\t-c / --brd=\t\t specify eagle board file in commandline, otherwise you will be asked by a QT Dialog")
+  print("\t-b / --brd=\t\t specify eagle board file in commandline, otherwise you will be asked by a QT Dialog")
   print("\t-t / --type=\t\t specify the type ('value' or 'part' are valid values) of the output csv, default:part")
   print("\t")
   print("\tspecial attributes for EAGLE parts that are interpreted by this script:")

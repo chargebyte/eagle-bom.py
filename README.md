@@ -17,7 +17,7 @@ this will give you a usage help as this:
 	-d		 debug the script (not used yet)
 	-h / --help		 print this help
 	-c / --csv=		 specify csv in commandline, otherwise you will be asked by a QT Dialog
-	-c / --brd=		 specify eagle board file in commandline, otherwise you will be asked by a QT Dialog
+	-b / --brd=		 specify eagle board file in commandline, otherwise you will be asked by a QT Dialog
 	-t / --type=		 specify the type ('value' or 'part' are valid values) of the output csv, default:part
 	
 	special attributes for EAGLE parts that are interpreted by this script:
