@@ -18,9 +18,10 @@ this will give you a usage help as this:
 	-b / --brd=		 specify eagle board file in commandline, otherwise you will be asked by a QT Dialog
 	
 	optional arguments
-	-d		 debug the script (not used yet)
+	-d		  debug the script (not used yet)
 	-h / --help		 print this help
 	-t / --type=		 specify the type ('value' or 'part' are valid values) of the output csv, default:part
+	-s / --separator=	 specify the separator that should be used as delimiter between each column in the output csv file
 	
 	special attributes for EAGLE parts that are interpreted by this script:
 		EXCLUDEFROMBOM		parts with this attribute set to a value other than blank will be excluded from the bom

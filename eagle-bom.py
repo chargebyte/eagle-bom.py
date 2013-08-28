@@ -103,7 +103,7 @@ def usage():
   print("\t-b / --brd=\t\t specify eagle board file in commandline, otherwise you will be asked by a QT Dialog")
   print("\t")
   print("\toptional arguments")
-  print("\t-d\t\t debug the script (not used yet)")
+  print("\t-d\t\t\t debug the script (not used yet)")
   print("\t-h / --help\t\t print this help")
   print("\t-t / --type=\t\t specify the type ('value' or 'part' are valid values) of the output csv, default:part")
   print("\t-s / --separator=\t specify the separator that should be used as delimiter between each column in the output csv file")
