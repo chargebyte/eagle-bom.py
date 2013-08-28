@@ -62,7 +62,7 @@ def getKeysFromDictList(elements):
 
 #group elements by value if they have the same attributes otherwise
 #and write to 'filename' as csv file
-def write_value_list(elements, filename):
+def write_value_list(elements, filename, set_delimiter):
   elements.sort(key=sortDictByAllButName)
 
   groups = []
@@ -82,16 +82,16 @@ def write_value_list(elements, filename):
       count += 1
     groupedElement['COUNT'] = count
     groupedElements.append(groupedElement)
-  return write_part_list(groupedElements, filename)
+  return write_part_list(groupedElements, filename, set_delimiter)
 
 #write elements to csv without grouping them i.e. this will be one line per component
-def write_part_list(elements, filename):
+def write_part_list(elements, filename, set_delimiter):
   keys = getKeysFromDictList(elements)
   #print keys
   keys.sort(key=sortColumsForCSV)
   elements.sort(key=sortRowsForCVS)
   f = open(filename, 'wb')
-  dict_writer = csv.DictWriter(f, keys)
+  dict_writer = csv.DictWriter(f, keys, delimiter=set_delimiter)
   dict_writer.writer.writerow(keys)
   dict_writer.writerows(elements)
   return 0;
@@ -106,6 +106,7 @@ def usage():
   print("\t-d\t\t debug the script (not used yet)")
   print("\t-h / --help\t\t print this help")
   print("\t-t / --type=\t\t specify the type ('value' or 'part' are valid values) of the output csv, default:part")
+  print("\t-s / --separator=\t specify the separator that should be used as delimiter between each column in the output csv file")
   print("\t")
   print("\tspecial attributes for EAGLE parts that are interpreted by this script:")
   print("\t\tEXCLUDEFROMBOM\t\tparts with this attribute set to a value other than blank will be excluded from the bom")
@@ -118,9 +119,10 @@ def main(argv):
   in_filename = ""
   out_filename = ""
   bom_type = ""
+  set_delimiter = ""
 
   try:                                
-    opts, args = getopt.getopt(argv, "hc:b:t:", ["help", "csv=", "brd=", "type="]) 
+    opts, args = getopt.getopt(argv, "hc:b:t:s:", ["help", "csv=", "brd=", "type=", "separator="]) 
   except getopt.GetoptError:           
     usage()                          
     sys.exit(2)     
@@ -137,6 +139,15 @@ def main(argv):
       in_filename = arg
     elif opt in ("-t", "--type"):
       bom_type = arg
+    elif opt in ("-s", "--separator"):
+      if (arg == "TAB"):
+        set_delimiter = '\t'
+      else:
+        set_delimiter = arg
+
+  if (not set_delimiter):
+    print("defaulting to separator \",\"")
+    set_delimiter = ','
 
   if (not in_filename):
     usage()
@@ -172,9 +183,9 @@ def main(argv):
 
   print("writing bom of type " + bom_type)
   if (bom_type=='value'):
-    write_value_list(elements, out_filename)
+    write_value_list(elements, out_filename, set_delimiter)
   elif (bom_type=='part'):
-    write_part_list(elements, out_filename)
+    write_part_list(elements, out_filename, set_delimiter)
 
 
 if __name__ == "__main__":
