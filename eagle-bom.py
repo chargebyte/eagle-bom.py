@@ -106,7 +106,8 @@ def usage():
   print("\t-d\t\t\t debug the script (not used yet)")
   print("\t-h / --help\t\t print this help")
   print("\t-t / --type=\t\t specify the type ('value' or 'part' are valid values) of the output csv, default:part")
-  print("\t-s / --separator=\t specify the separator that should be used as delimiter between each column in the output csv file")
+  print("\t-v / --variant=\t\t specify which variant should be used, default is to use the active variant as saved in the board file")
+  print("\t-s / --separator=\t specify the separator that should be used as delimiter between each column in the output csv file, use 'TAB' to specify tabulator as separator")
   print("\t")
   print("\tspecial attributes for EAGLE parts that are interpreted by this script:")
   print("\t\tEXCLUDEFROMBOM\t\tparts with this attribute set to a value other than blank will be excluded from the bom")
@@ -120,9 +121,13 @@ def main(argv):
   out_filename = ""
   bom_type = ""
   set_delimiter = ""
+  selected_variant = "" #stores the actual used variant
+  set_variant = ""      #used to store the command line parameter for variant
+  default_variant = ""  #stores the default variant if available
+  number_variant = 0    #stores the number of defined variants in the board file
 
   try:                                
-    opts, args = getopt.getopt(argv, "hc:b:t:s:", ["help", "csv=", "brd=", "type=", "separator="]) 
+    opts, args = getopt.getopt(argv, "hc:b:t:s:v:", ["help", "csv=", "brd=", "type=", "separator=", "variant="]) 
   except getopt.GetoptError:           
     usage()                          
     sys.exit(2)     
@@ -139,6 +144,8 @@ def main(argv):
       in_filename = arg
     elif opt in ("-t", "--type"):
       bom_type = arg
+    elif opt in ("-v", "--variant"):
+      set_variant = arg.encode('utf8')
     elif opt in ("-s", "--separator"):
       if (arg == "TAB"):
         set_delimiter = '\t'
@@ -167,6 +174,23 @@ def main(argv):
 
   elements = []
 
+  #find all variants that are in the board
+  for elem in drawing.iterfind('board/variantdefs/variantdef'):
+    number_variant = number_variant + 1
+    if (('current' in elem.attrib) and (elem.attrib['current']=="yes")):
+      default_variant = elem.attrib['name'].encode('utf8')
+    if (elem.attrib['name'].encode('utf8') == set_variant):
+      selected_variant = set_variant
+
+  if (selected_variant == "" and default_variant == "" and number_variant > 0):
+    print "invalid variant defined, aborting"
+    return
+  elif (selected_variant == ""):
+    selected_variant = default_variant
+
+  if (number_variant > 0):
+    print "variant: " + selected_variant
+
   #read all elements that are on the board
   for elem in drawing.iterfind('board/elements/element'):
     element = {}
@@ -176,6 +200,12 @@ def main(argv):
     for attribute in elem.iterfind('attribute'):
       if ('value' in attribute.attrib):
         element[attribute.attrib['name'].upper()] = attribute.attrib['value'].encode('utf8')
+    for variant in elem.iterfind('variant'):
+      if (variant.attrib['name'] == selected_variant):
+        if ('value' in variant.attrib):
+          element['VALUE'] = variant.attrib['value'].encode('utf8')
+        if ('populate' in variant.attrib):
+          element['DO_NOT_PLACE'] = "yes"
     #TODO: check if attributes are sorted here or we need to do sorting for further actions
     if ('EXCLUDEFROMBOM' not in element):
       elements.append(element)
