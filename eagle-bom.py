@@ -96,7 +96,6 @@ def write_part_list(elements, filename, set_delimiter):
     """write elements to csv without grouping them i.e. this will be one
     line per component"""
     keys = get_keys_from_dict_list(elements)
-    #print keys
     keys.sort(key=sort_colums_for_csv)
     elements.sort(key=sort_rows_for_csv)
     file_pointer = open(filename, 'wb')
@@ -213,7 +212,7 @@ def select_variant(drawing, variant_find_string, settings):
         selected_variant = default_variant
 
     if (number_variant > 0):
-        print "variant: " + selected_variant
+        print ("variant: " + selected_variant)
 
 def bom_creation(settings):
     """ this function reads the eagle XML and processes it to produce the
