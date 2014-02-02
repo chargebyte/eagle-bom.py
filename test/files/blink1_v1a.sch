@@ -5376,7 +5376,7 @@ Source: http://www.atmel.com/dyn/resources/prod_documents/doc5089.pdf</descripti
 <part name="GND4" library="SparkFun-20110517" deviceset="GND" device=""/>
 <part name="R1" library="rcl" deviceset="R-US_" device="R0402" value="68"/>
 <part name="R2" library="rcl" deviceset="R-US_" device="R0402" value="68"/>
-<part name="C2" library="rcl" deviceset="C-US" device="C0603" value="10uF"/>
+<part name="C2" library="rcl" deviceset="C-US" device="C0603" value="10µF"/>
 <part name="R3" library="rcl" deviceset="R-US_" device="R0402" value="1k5"/>
 <part name="P+2" library="supply1" deviceset="VCC" device=""/>
 <part name="IC1" library="blink1_v1a" deviceset="TODSTUFF_ATTINY45" device="TSSOP8"/>

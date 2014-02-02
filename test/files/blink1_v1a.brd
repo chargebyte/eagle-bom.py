@@ -508,7 +508,7 @@ Please make sure your boards conform to these design rules.</description>
 <element name="R2" library="rcl" package="R0402" value="68" x="14.8336" y="10.8458" smashed="yes" rot="R180">
 <attribute name="NAME" x="14.6304" y="11.0998" size="0.381" layer="25" font="vector" ratio="10" rot="R270"/>
 </element>
-<element name="C2" library="rcl" package="C0603" value="10uF" x="14.732" y="8.128" smashed="yes" rot="R90">
+<element name="C2" library="rcl" package="C0603" value="10µF" x="14.732" y="8.128" smashed="yes" rot="R90">
 <attribute name="NAME" x="14.4526" y="7.8994" size="0.381" layer="25" font="vector" ratio="10"/>
 </element>
 <element name="R3" library="rcl" package="R0402" value="1k5" x="13.1127" y="10.2806" smashed="yes" rot="R270">
