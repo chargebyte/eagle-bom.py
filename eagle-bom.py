@@ -248,7 +248,7 @@ def bom_creation(settings):
             
         # only try to get description if we use the schematic...
         # the BRD file does not contain this information
-        if (settings['in_filename_sch']):
+        if ('in_filename_sch' in settings):
             element['DESCRIPTION'] = get_description(drawing,
                                         elem.attrib['library'].encode('utf8'),
                                         elem.attrib['deviceset'].encode('utf8'))
@@ -302,7 +302,7 @@ def parse_command_line_arguments(argv):
     for opt, arg in opts:                                
         if opt in ("-h", "--help"):
             usage()
-            sys.exit()
+            sys.exit(0)
         elif opt in ("-c", "--csv"):
             settings['out_filename'] = arg
         elif opt in ("-b", "--brd"):
@@ -334,11 +334,11 @@ def main(argv):
     if ('in_filename_brd' not in settings
         and 'in_filename_sch' not in settings):
         usage()
-        sys.exit(2)
+        sys.exit(3)
 
     if ('out_filename' not in settings):
         usage()
-        sys.exit(2)
+        sys.exit(4)
 
     if ('bom_type' not in settings):
         print("defaulting to bom type 'part'")
