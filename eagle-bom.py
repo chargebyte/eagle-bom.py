@@ -11,6 +11,7 @@ import csv
 import sys
 from itertools import groupby
 import getopt
+import re
 
 def sort_colums_for_csv(column_name):
     """this is the sort function for the keys (i.e. columns) of the csv file"""
@@ -187,6 +188,20 @@ def change_part_by_variant(part_tree, part, selected_variant):
             if ('populate' in variant.attrib):
                 part['DO_NOT_PLACE'] = "yes"
 
+def get_first_line_text_from_html(html_string):
+    """reduce html to the first line of text and strip all html tags
+    """
+    if html_string == None:
+        return None
+    
+    p_div = re.compile(r"</?(p|div|br).*?>", 
+                       re.IGNORECASE | re.DOTALL)
+    html_string = p_div.sub("\n", html_string)
+    html_string = re.sub('<[^<]+?>', '', html_string)
+    html_string = html_string.split('\n', 1)[0]
+
+    return html_string
+
 def select_variant(drawing, variant_find_string, settings):
     """find all variants that are defined in the drawing
     select the most appropriate one based on settings and default
@@ -254,9 +269,11 @@ def bom_creation(settings):
         # only try to get description if we use the schematic...
         # the BRD file does not contain this information
         if ('in_filename_sch' in settings):
-            element['DESCRIPTION'] = get_description(drawing,
+            description = get_description(drawing,
                                         elem.attrib['library'],
                                         elem.attrib['deviceset'])
+            description = get_first_line_text_from_html(description)
+            element['DESCRIPTION'] = description
         
             element['DEVICE'] = elem.attrib["device"]
             element['PACKAGE'] = get_package(drawing,
