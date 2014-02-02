@@ -11,10 +11,9 @@ python:
 
 before_install:
  - sudo apt-get update -qq
- - sudo apt-get install -qq pylint pychecker
+ - sudo apt-get install -qq pylint
  
 # command to run tests
 script: 
-  - pychecker eagle-bom.py
-  - pylint eagle-bom.py
+  - pylint --rcfile=.pylint.config eagle-bom.py
   
