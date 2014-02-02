@@ -39,9 +39,9 @@ def sort_rows_for_csv(part):
     """this is the sort function that is used to determine the order of the
     lines of the csv"""
     if (part['NAME'].find(',')):
-      stri = part['NAME'].split(',')[0]
+        stri = part['NAME'].split(',')[0]
     else:
-      stri = part['NAME']
+        stri = part['NAME']
     if 'DO_NOT_PLACE' in part:
         return 0
     if 'PROVIDED_BY' in part:
