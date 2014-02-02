@@ -38,7 +38,10 @@ def sort_dict_by_all_but_name(part):
 def sort_rows_for_csv(part):
     """this is the sort function that is used to determine the order of the
     lines of the csv"""
-    stri = part['NAME'].split(',')[0]
+    if (part['NAME'].find(',')):
+      stri = part['NAME'].split(',')[0]
+    else:
+      stri = part['NAME']
     if 'DO_NOT_PLACE' in part:
         return 0
     if 'PROVIDED_BY' in part:
@@ -98,8 +101,9 @@ def write_part_list(elements, filename, set_delimiter):
     keys = get_keys_from_dict_list(elements)
     keys.sort(key=sort_colums_for_csv)
     elements.sort(key=sort_rows_for_csv)
-    file_pointer = open(filename, 'wb')
-    dict_writer = csv.DictWriter(file_pointer, keys, delimiter=set_delimiter)
+    file_pointer = open(filename, 'w')
+    dict_writer = csv.DictWriter(file_pointer, keys, delimiter=set_delimiter, lineterminator = '\n')
+
     dict_writer.writer.writerow(keys)
     dict_writer.writerows(elements)
     return 0
@@ -240,6 +244,7 @@ def bom_creation(settings):
     for elem in drawing.iterfind(part_find_string):
         element = {}
         element['NAME'] = elem.attrib['name'].encode('utf8')
+        
         if ("value" in elem.attrib):
             element['VALUE'] = elem.attrib['value'].encode('utf8')
         if ("package" in elem.attrib):
