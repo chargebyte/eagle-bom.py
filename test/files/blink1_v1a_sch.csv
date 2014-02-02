@@ -1,0 +1,18 @@
+NAME,VALUE,PACKAGE,DEVICE,DESCRIPTION
+C1,100n,C0402,C0402,"<B>CAPACITOR</B>, American symbol"
+C2,10uF,C0603,C0603,"<B>CAPACITOR</B>, American symbol"
+D1,3.6V dual zener,SOT23,SOT23,Dual <b>DIODE</b> Cathode-Anode|Anode-Cathode
+D2,,LED_1010,,
+D3,,LED_1010,,
+F1,MF-PSMF020X,0805,0805,
+IC1,,TSSOP8,TSSOP8,
+R4,150,R0402,R0402,"<B>RESISTOR</B>, American symbol"
+R5,100,R0402,R0402,"<B>RESISTOR</B>, American symbol"
+R6,150,R0402,R0402,"<B>RESISTOR</B>, American symbol"
+R1,68,R0402,R0402,"<B>RESISTOR</B>, American symbol"
+R2,68,R0402,R0402,"<B>RESISTOR</B>, American symbol"
+R3,1k5,R0402,R0402,"<B>RESISTOR</B>, American symbol"
+R7,150,R0402,R0402,"<B>RESISTOR</B>, American symbol"
+R8,100,R0402,R0402,"<B>RESISTOR</B>, American symbol"
+R9,150,R0402,R0402,"<B>RESISTOR</B>, American symbol"
+U$1,,PCB-USB-PAC,,
