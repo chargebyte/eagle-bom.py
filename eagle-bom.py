@@ -207,8 +207,8 @@ def select_variant(drawing, variant_find_string, settings):
     if (selected_variant == "" and
         default_variant == "" and
         number_variant > 0):
-        print "invalid variant defined, aborting"
-        return
+            print "invalid variant defined, aborting"
+            return
     elif (selected_variant == ""):
         selected_variant = default_variant
 
