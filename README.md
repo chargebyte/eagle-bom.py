@@ -13,19 +13,22 @@ You can use eagle-bom.py as follows:
 execute the script: "python eagle-bom.py"
 
 this will give you a usage help as this:
+usage: 
 	mandatory arguments
-	-c / --csv=		 specify csv in commandline, otherwise you will be asked by a QT Dialog
-	-b / --brd=		 specify eagle board file in commandline, otherwise you will be asked by a QT Dialog
+	-c / --csv=		 csv where you want to store the BOM
+	exclusive mandatory arguments (i.e. choose one of the following)
+	-b / --brd=		 eagle board file that you want to use as input for the BOM
+	-s / --sch=		 eagle schematic file that you want to use as input for the BOM
 	
 	optional arguments
-	-d			 debug the script (not used yet)
 	-h / --help		 print this help
 	-t / --type=		 specify the type ('value' or 'part' are valid values) of the output csv, default:part
 	-v / --variant=		 specify which variant should be used, default is to use the active variant as saved in the board file
-	-s / --separator=	 specify the separator that should be used as delimiter between each column in the output csv file, use 'TAB' to specify tabulator as separator
+	--separator=		 specify the separator that should be used as delimiter between each column in the output csv file, use 'TAB'to specify tabulator as separator
 	
 	special attributes for EAGLE parts that are interpreted by this script:
 		EXCLUDEFROMBOM		parts with this attribute set to a value other than blank will be excluded from the bom
-		DO_NOT_PLACE		usually should be blank or 'yes' for instructing the manufacturer to leave this part unplaced
+		DO_NOT_PLACE		usually should have the value 'yes' for instructing the manufacturer to leave this part unplaced
 		PROVIDED_BY		specify where the manufacturer gets the parts from
+		additionally DNP markings from eagle variants are converted to use the DO_NOT_PLACE format
 
