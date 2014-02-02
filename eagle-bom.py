@@ -102,7 +102,8 @@ def write_part_list(elements, filename, set_delimiter):
     keys.sort(key=sort_colums_for_csv)
     elements.sort(key=sort_rows_for_csv)
     file_pointer = open(filename, 'w')
-    dict_writer = csv.DictWriter(file_pointer, keys, delimiter=set_delimiter, lineterminator = '\n')
+    dict_writer = csv.DictWriter(file_pointer, keys, delimiter=set_delimiter,
+                                 lineterminator = '\n')
 
     dict_writer.writer.writerow(keys)
     dict_writer.writerows(elements)
