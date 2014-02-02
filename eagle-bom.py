@@ -182,7 +182,7 @@ def change_part_by_variant(part_tree, part, selected_variant):
     for variant in part_tree.iterfind('variant'):
         if (variant.attrib['name'] == selected_variant):
             if ('value' in variant.attrib):
-                part['VALUE'] = variant.attrib['value'].encode('utf8')
+                part['VALUE'] = variant.attrib['value']
             if ('populate' in variant.attrib):
                 part['DO_NOT_PLACE'] = "yes"
 
@@ -202,8 +202,8 @@ def select_variant(drawing, variant_find_string, settings):
     for elem in drawing.iterfind(variant_find_string):
         number_variant = number_variant + 1
         if (('current' in elem.attrib) and (elem.attrib['current']=="yes")):
-            default_variant = elem.attrib['name'].encode('utf8')
-        if (elem.attrib['name'].encode('utf8') == settings['set_variant']):
+            default_variant = elem.attrib['name']
+        if (elem.attrib['name'] == settings['set_variant']):
             selected_variant = settings['set_variant']
             
     #find out which variant to use, if there is any
@@ -243,37 +243,37 @@ def bom_creation(settings):
     #read all elements that are on the board
     for elem in drawing.iterfind(part_find_string):
         element = {}
-        element['NAME'] = elem.attrib['name'].encode('utf8')
+        element['NAME'] = elem.attrib['name']
         
         if ("value" in elem.attrib):
-            element['VALUE'] = elem.attrib['value'].encode('utf8')
+            element['VALUE'] = elem.attrib['value']
         if ("package" in elem.attrib):
-            element['PACKAGE'] = elem.attrib['package'].encode('utf8')
+            element['PACKAGE'] = elem.attrib['package']
             
         # only try to get description if we use the schematic...
         # the BRD file does not contain this information
         if ('in_filename_sch' in settings):
             element['DESCRIPTION'] = get_description(drawing,
-                                        elem.attrib['library'].encode('utf8'),
-                                        elem.attrib['deviceset'].encode('utf8'))
+                                        elem.attrib['library'],
+                                        elem.attrib['deviceset'])
         
-            element['DEVICE'] = elem.attrib["device"].encode('utf8')
+            element['DEVICE'] = elem.attrib["device"]
             element['PACKAGE'] = get_package(drawing,
-                                    elem.attrib['library'].encode('utf8'),
-                                    elem.attrib['deviceset'].encode('utf8'),
-                                    elem.attrib['device'].encode('utf8'))
+                                    elem.attrib['library'],
+                                    elem.attrib['deviceset'],
+                                    elem.attrib['device'])
             
         #get all attributes of the element
         for attribute in elem.iterfind('attribute'):
             if ('value' in attribute.attrib):
                 attribute_name = attribute.attrib['name'].upper()
-                attribute_value = attribute.attrib['value'].encode('utf8')
+                attribute_value = attribute.attrib['value']
                 element[attribute_name] = attribute_value
         change_part_by_variant(elem, element, selected_variant)
         if ('EXCLUDEFROMBOM' not in element and
         (('in_filename_sch' in settings and is_part_on_pcb(drawing,
-        elem.attrib['library'].encode('utf8'),
-        elem.attrib['deviceset'].encode('utf8'))
+        elem.attrib['library'],
+        elem.attrib['deviceset'])
         ) or 'in_filename_brd' in settings)):
             elements.append(element)
 
@@ -316,7 +316,7 @@ def parse_command_line_arguments(argv):
         elif opt in ("-t", "--type"):
             settings['bom_type'] = arg
         elif opt in ("-v", "--variant"):
-            settings['set_variant'] = arg.encode('utf8')
+            settings['set_variant'] = arg
         elif opt in ("--separator"):
             if (arg == "TAB"):
                 settings['set_delimiter'] = '\t'
