@@ -44,9 +44,9 @@ def sort_rows_for_csv(part):
     else:
         stri = part['NAME']
     if 'DO_NOT_PLACE' in part:
-        return 0
+        return '0'
     if 'PROVIDED_BY' in part:
-        return 1
+        return '1'
     return ''.join(c for c in stri if not c.isdigit())
 
 def sort_dict_name_by_number(part):
