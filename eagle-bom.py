@@ -234,6 +234,8 @@ def select_variant(drawing, variant_find_string, settings):
     if (number_variant > 0):
         print ("variant: " + selected_variant)
 
+    return selected_variant
+
 def bom_creation(settings):
     """ this function reads the eagle XML and processes it to produce the
     bill of material
