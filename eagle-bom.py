@@ -26,7 +26,7 @@ def sort_colums_for_csv(column_name):
     if column_name in sort_dict:
         return sort_dict[column_name]
     else:
-        return 99999
+        return ord(column_name[0]) + 99
 
 def sort_dict_by_all_but_name(part):
     """this is the sort and group function that is used for grouping the parts 
@@ -130,6 +130,9 @@ def usage():
     print("\t--separator=\t\t specify the separator that should be used as "\
               "delimiter between each column in the output csv file, use 'TAB'"\
               "to specify tabulator as separator")
+    print("\t--notestpads\t\t excludes all parts that have a attriute "\
+              "'TP_SIGNAL_NAME' with a value")
+    print("\t")
     print("\t")
     print("\tspecial attributes for EAGLE parts that are interpreted by this "\
               "script:")
@@ -295,7 +298,8 @@ def bom_creation(settings):
         elem.attrib['library'],
         elem.attrib['deviceset'])
         ) or 'in_filename_brd' in settings)):
-            elements.append(element)
+            if((settings['notestpads'] == False) or ('TP_SIGNAL_NAME' not in element)):
+                elements.append(element)
 
     print("writing bom of type " + settings['bom_type'])
     if (settings['bom_type']=='value'):
@@ -310,6 +314,7 @@ def parse_command_line_arguments(argv):
     and returns everything in an associative array
     """
     settings = {}
+    settings['notestpads'] = False
 
     try:                                                                
         opts = getopt.getopt(argv,
@@ -318,7 +323,8 @@ def parse_command_line_arguments(argv):
                                     "brd=", "sch=",
                                     "type=",
                                     "separator=",
-                                    "variant="])[0]
+                                    "variant=",
+                                    "notestpads"])[0]
     except getopt.GetoptError:                     
         usage()                                                    
         sys.exit(2)         
@@ -327,6 +333,8 @@ def parse_command_line_arguments(argv):
         if opt in ("-h", "--help"):
             usage()
             sys.exit(0)
+        elif opt in("--notestpads"):
+            settings['notestpads'] = True
         elif opt in ("-c", "--csv"):
             settings['out_filename'] = arg
         elif opt in ("-b", "--brd"):
