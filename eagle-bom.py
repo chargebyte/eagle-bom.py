@@ -13,18 +13,20 @@ from itertools import groupby
 import getopt
 import re
 
+column_sort_dict = {
+        'NAME':0,
+        'COUNT':1,
+        'VALUE':2,
+        'PACKAGE':3,
+        'DO_NOT_PLACE':4,
+        'PROVIDED_BY':5
+}
+
 def sort_colums_for_csv(column_name):
     """this is the sort function for the keys (i.e. columns) of the csv file"""
-    sort_dict = {
-            'NAME':0,
-            'COUNT':1,
-            'VALUE':2,
-            'PACKAGE':3,
-            'DO_NOT_PLACE':4,
-            'PROVIDED_BY':5
-        }
-    if column_name in sort_dict:
-        return sort_dict[column_name]
+
+    if column_name in column_sort_dict:
+        return column_sort_dict[column_name]
     else:
         return ord(column_name[0]) + 99
 
@@ -100,13 +102,23 @@ def write_part_list(elements, filename, set_delimiter):
     """write elements to csv without grouping them i.e. this will be one
     line per component"""
     keys = get_keys_from_dict_list(elements)
-    keys.sort(key=sort_colums_for_csv)
+
+    #remove fix position columns from keys, remember those in separate list
+    fix_position_keys = []
+    for key in column_sort_dict:
+      if key in keys:
+        fix_position_keys.append(key)
+        keys.remove(key)
+
+    fix_position_keys.sort(key=sort_colums_for_csv)
+    keys.sort()
+    all_keys_sorted = fix_position_keys + keys
     elements.sort(key=sort_rows_for_csv)
     file_pointer = open(filename, 'w')
-    dict_writer = csv.DictWriter(file_pointer, keys, delimiter=set_delimiter,
+    dict_writer = csv.DictWriter(file_pointer, all_keys_sorted, delimiter=set_delimiter,
                                  lineterminator = '\n')
 
-    dict_writer.writer.writerow(keys)
+    dict_writer.writer.writerow(all_keys_sorted)
     dict_writer.writerows(elements)
     return 0
 
