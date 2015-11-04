@@ -196,6 +196,11 @@ def is_part_on_pcb(drawing, library, deviceset):
 def change_part_by_variant(part_tree, part, selected_variant):
     """find out if the element has different settings for the selected variant
     and change it accordingly"""
+
+    if 'populate' in part_tree.attrib and part_tree.attrib['populate'] == "no":
+        part['DO_NOT_PLACE'] = "yes"
+    return
+
     for variant in part_tree.iterfind('variant'):
         if (variant.attrib['name'] == selected_variant):
             if ('value' in variant.attrib):
@@ -387,6 +392,9 @@ def main(argv):
     if ('bom_type' not in settings):
         print("defaulting to bom type 'part'")
         settings['bom_type'] = 'part'
+
+    if not 'variant' in settings:
+        settings['set_variant'] = ''
 
 
     bom_creation(settings)
