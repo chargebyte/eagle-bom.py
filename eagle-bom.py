@@ -393,7 +393,7 @@ def main(argv):
         print("defaulting to bom type 'part'")
         settings['bom_type'] = 'part'
 
-    if not 'variant' in settings:
+    if not 'set_variant' in settings:
         settings['set_variant'] = ''
 
 
