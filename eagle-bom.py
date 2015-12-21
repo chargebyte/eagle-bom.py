@@ -119,7 +119,8 @@ def write_part_list(elements, filename, set_delimiter):
                                  lineterminator = '\n')
 
     dict_writer.writer.writerow(all_keys_sorted)
-    dict_writer.writerows(elements)
+    for row in elements:
+      dict_writer.writerow(dict((k, v.encode('utf-8') if type(v) is unicode else v) for k, v in row.iteritems()))
     return 0
 
 def usage():
