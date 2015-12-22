@@ -211,7 +211,7 @@ def change_part_by_variant(part_tree, part, selected_variant):
 
     if 'populate' in part_tree.attrib and part_tree.attrib['populate'] == "no":
         part['DO_NOT_PLACE'] = "yes"
-    return
+        return
 
     for variant in part_tree.iterfind('variant'):
         if (variant.attrib['name'] == selected_variant):
