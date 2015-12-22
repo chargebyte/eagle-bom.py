@@ -119,7 +119,8 @@ def write_part_list(elements, filename, set_delimiter):
                                  lineterminator = '\n')
 
     dict_writer.writer.writerow(all_keys_sorted)
-    dict_writer.writerows(elements)
+    for row in elements:
+      dict_writer.writerow(dict((k, v.encode('utf-8') if type(v) is unicode else v) for k, v in row.iteritems()))
     return 0
 
 def usage():
@@ -176,6 +177,17 @@ def get_package(drawing, library, deviceset, device):
             if "package" in device_tree.attrib:
                 return device_tree.attrib['package']
     return ""
+    
+def get_device_tree(deviceset_tree, device):
+    """get the package name of a device from input parameters drawing,
+    library, deviceset and device
+    NOTE: works for schematic trees only"""
+    #print "get_device_tree"
+    for device_tree in deviceset_tree.iterfind('devices/device'):
+        #print device, device_tree.attrib['name']
+        if device_tree.attrib['name'] == device:
+            return device_tree
+    return none
     
 def get_description(drawing, library, deviceset):
     """get the description of a deviceset from input parameters drawing, library
@@ -281,6 +293,12 @@ def bom_creation(settings):
     #read all elements that are on the board
     for elem in drawing.iterfind(part_find_string):
         element = {}
+        deviceset_tree = get_librarypart(drawing, elem.attrib['library'], elem.attrib['deviceset'])
+        device_tree = get_device_tree(deviceset_tree, elem.attrib['device'])
+
+        for technology_tree in device_tree.iter('attribute'): #find('technologies/technology/attribute'):
+            element[technology_tree.attrib['name']] = technology_tree.attrib['value']        
+
         element['NAME'] = elem.attrib['name']
         
         if ("value" in elem.attrib):
