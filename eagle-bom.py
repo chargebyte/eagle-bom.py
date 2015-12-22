@@ -187,7 +187,7 @@ def get_device_tree(deviceset_tree, device):
         #print device, device_tree.attrib['name']
         if device_tree.attrib['name'] == device:
             return device_tree
-    return none
+    return None
     
 def get_description(drawing, library, deviceset):
     """get the description of a deviceset from input parameters drawing, library
