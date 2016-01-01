@@ -284,8 +284,15 @@ def bom_creation(settings):
         part_find_string = "schematic/parts/part"
 
     root = tree.getroot()
+
+    #if eagleversion was set, just output the used version of eagle and exit
+    if 'eagleversion' in settings:
+        return output_eagle_version(root)
+
+
     drawing = root[0]
     elements = []
+
 
     #select which variant to use
     selected_variant = select_variant(drawing, variant_find_string, settings)
@@ -344,6 +351,13 @@ def bom_creation(settings):
         write_part_list(elements, settings['out_filename'],
                         settings['set_delimiter'])
 
+def output_eagle_version(xml_root):
+    if "version" in xml_root.attrib:
+        print(xml_root.attrib['version'])
+        return True
+
+    return False
+
 def parse_command_line_arguments(argv):
     """parses the command line arguments according to usage print
     and returns everything in an associative array
@@ -359,7 +373,8 @@ def parse_command_line_arguments(argv):
                                     "type=",
                                     "separator=",
                                     "variant=",
-                                    "notestpads"])[0]
+                                    "notestpads",
+                                    "eagleversion"])[0]
     except getopt.GetoptError:                     
         usage()                                                    
         sys.exit(2)         
@@ -385,6 +400,8 @@ def parse_command_line_arguments(argv):
                 settings['set_delimiter'] = '\t'
             else:
                 settings['set_delimiter'] = arg
+        elif opt in ("--eagleversion"):
+            settings['eagleversion'] = True
 
     return settings
 
@@ -394,26 +411,26 @@ def main(argv):
     settings = parse_command_line_arguments(argv)
 
     #check sanity of settings
-    if ('set_delimiter' not in settings):
-        print("defaulting to separator \",\"")
-        settings['set_delimiter'] = ','
-
     if ('in_filename_brd' not in settings
         and 'in_filename_sch' not in settings):
         usage()
         sys.exit(3)
 
-    if ('out_filename' not in settings):
-        usage()
-        sys.exit(4)
+    if ('eagleversion' not in settings):
+        if ('out_filename' not in settings):
+            usage()
+            sys.exit(4)
 
-    if ('bom_type' not in settings):
-        print("defaulting to bom type 'part'")
-        settings['bom_type'] = 'part'
+        if ('set_delimiter' not in settings):
+            print("defaulting to separator \",\"")
+            settings['set_delimiter'] = ','
+
+        if ('bom_type' not in settings):
+            print("defaulting to bom type 'part'")
+            settings['bom_type'] = 'part'
 
     if not 'set_variant' in settings:
         settings['set_variant'] = ''
-
 
     bom_creation(settings)
 
