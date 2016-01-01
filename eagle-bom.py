@@ -145,6 +145,9 @@ def usage():
               "to specify tabulator as separator")
     print("\t--notestpads\t\t excludes all parts that have a attriute "\
               "'TP_SIGNAL_NAME' with a value")
+    print("\t--eagleversion\t\t print the version of eagle that was used to "\
+              "generate the board or schematic (only needs arguments for "\
+              "board or schematic, not for csv")
     print("\t")
     print("\t")
     print("\tspecial attributes for EAGLE parts that are interpreted by this "\

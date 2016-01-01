@@ -26,6 +26,7 @@ usage:
 	-v / --variant=		 specify which variant should be used, default is to use the active variant as saved in the board file
 	--separator=		 specify the separator that should be used as delimiter between each column in the output csv file, use 'TAB'to specify tabulator as separator
 	--notestpads		 excludes all parts that have a attriute 'TP_SIGNAL_NAME' with a value
+    --eagleversion       print the version of eagle that was used to generate the board or schematic (only needs arguments for board or schematic, not for csv)
 	
 	
 	special attributes for EAGLE parts that are interpreted by this script:
