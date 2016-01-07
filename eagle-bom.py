@@ -303,11 +303,13 @@ def bom_creation(settings):
     #read all elements that are on the board
     for elem in drawing.iterfind(part_find_string):
         element = {}
-        deviceset_tree = get_librarypart(drawing, elem.attrib['library'], elem.attrib['deviceset'])
-        device_tree = get_device_tree(deviceset_tree, elem.attrib['device'])
-
-        for technology_tree in device_tree.iter('attribute'): #find('technologies/technology/attribute'):
-            element[technology_tree.attrib['name']] = technology_tree.attrib['value']        
+        
+        #check if there are attributes in the library and pull them in
+        if ('deviceset' in elem.attrib):
+            deviceset_tree = get_librarypart(drawing, elem.attrib['library'], elem.attrib['deviceset'])
+            device_tree = get_device_tree(deviceset_tree, elem.attrib['device'])
+            for technology_tree in device_tree.iter('attribute'): #find('technologies/technology/attribute'):
+                element[technology_tree.attrib['name']] = technology_tree.attrib['value']        
 
         element['NAME'] = elem.attrib['name']
         
