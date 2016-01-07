@@ -120,7 +120,9 @@ def write_part_list(elements, filename, set_delimiter):
 
     dict_writer.writer.writerow(all_keys_sorted)
     for row in elements:
-      dict_writer.writerow(dict((k, v.encode('utf-8') if type(v) is unicode else v) for k, v in row.iteritems()))
+      for k,v in row.items():
+        row[k] = v.encode('utf-8') if type(v) is unicode else v
+      dict_writer.writerow(row)
     return 0
 
 def usage():
