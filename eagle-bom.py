@@ -118,10 +118,17 @@ def write_part_list(elements, filename, set_delimiter):
     dict_writer = csv.DictWriter(file_pointer, all_keys_sorted, delimiter=set_delimiter,
                                  lineterminator = '\n')
 
+    #write header
     dict_writer.writer.writerow(all_keys_sorted)
+    #write content row by row
     for row in elements:
       for k,v in row.items():
-        row[k] = v.encode('utf-8') if type(v) is unicode else v
+        #convert strings so that the dict writer can process unicode in python2
+        #try catch is used to avoid crash in python3 because "unicode" is not defined
+        try:
+            row[k] = v.encode('utf-8') if type(v) is unicode else v
+        except:
+            continue
       dict_writer.writerow(row)
     return 0
 
