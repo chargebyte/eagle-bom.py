@@ -106,9 +106,9 @@ def write_part_list(elements, filename, set_delimiter):
     #remove fix position columns from keys, remember those in separate list
     fix_position_keys = []
     for key in column_sort_dict:
-      if key in keys:
-        fix_position_keys.append(key)
-        keys.remove(key)
+        if key in keys:
+            fix_position_keys.append(key)
+            keys.remove(key)
 
     fix_position_keys.sort(key=sort_colums_for_csv)
     keys.sort()
@@ -122,15 +122,15 @@ def write_part_list(elements, filename, set_delimiter):
     dict_writer.writer.writerow(all_keys_sorted)
     #write content row by row
     for row in elements:
-      for key, val in row.items():
-        #convert strings so that the dict writer can process unicode in python2
-        #try catch is used to avoid crash in python3 because "unicode" is not
-        #defined
-        try:
-            row[key] = val.encode('utf-8') if type(val) is unicode else val
-        except:
-            continue
-      dict_writer.writerow(row)
+        for key, val in row.items():
+            #convert strings so that the dict writer can process unicode in
+            #python2 try catch is used to avoid crash in python3 because
+            #"unicode" is not defined
+            try:
+                row[key] = val.encode('utf-8') if type(val) is unicode else val
+            except:
+                continue
+        dict_writer.writerow(row)
     return 0
 
 def usage():
