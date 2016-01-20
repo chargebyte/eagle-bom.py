@@ -363,7 +363,7 @@ def bom_creation(settings):
                         settings['set_delimiter'])
 
 def output_eagle_version(xml_root):
-    """print the version of the eagle file that has been used to generate 
+    """print the version of the eagle file that has been used to generate
     the eagle file
     """
     if "version" in xml_root.attrib:
