@@ -2,6 +2,9 @@
 files to build a bill-of material
 """
 
+#for compatibility between python2 and python3 in conjunction with pylint
+from __future__ import print_function
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
