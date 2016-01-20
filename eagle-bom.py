@@ -131,7 +131,7 @@ def write_part_list(elements, filename, set_delimiter):
             #"unicode" is not defined
             try:
                 row[key] = val.encode('utf-8') if type(val) is unicode else val
-            except:
+            except SyntaxError:
                 continue
         dict_writer.writerow(row)
     return 0
@@ -354,14 +354,12 @@ def bom_creation(settings):
                 attribute_value = attribute.attrib['value']
                 element[attribute_name] = attribute_value
         change_part_by_variant(elem, element, selected_variant)
-        if ('EXCLUDEFROMBOM' not in element and
-        (('in_filename_sch' in settings and is_part_on_pcb(drawing,
-        elem.attrib['library'],
-        elem.attrib['deviceset'])
-        ) or 'in_filename_brd' in settings)):
-            if ((settings['notestpads'] == False) or
-                ('TP_SIGNAL_NAME' not in element)):
-                elements.append(element)
+        if ('EXCLUDEFROMBOM' not in element and (('in_filename_sch' in settings
+          and is_part_on_pcb(drawing, elem.attrib['library'],
+          elem.attrib['deviceset'])) or 'in_filename_brd' in settings)
+          and (settings['notestpads'] == False
+          or 'TP_SIGNAL_NAME' not in element)):
+            elements.append(element)
     write_bom(elements, settings)
 
 def output_eagle_version(xml_root):
