@@ -131,7 +131,7 @@ def write_part_list(elements, filename, set_delimiter):
             #"unicode" is not defined
             try:
                 row[key] = val.encode('utf-8') if type(val) is unicode else val
-            except SyntaxError:
+            except NameError:
                 continue
         dict_writer.writerow(row)
     return 0
