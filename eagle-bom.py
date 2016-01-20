@@ -280,21 +280,31 @@ def select_variant(drawing, variant_find_string, settings):
 
     return selected_variant
 
+def write_bom(elements, settings):
+    """with a prepared list of all BOM elements this function looks at settings
+    and calls the matching internal function that exports those list to the
+    desired BOM format"""
+    print("writing bom of type " + settings['bom_type'])
+    if settings['bom_type'] == 'value':
+        write_value_list(elements, settings['out_filename'],
+                         settings['set_delimiter'])
+    elif settings['bom_type'] == 'part':
+        write_part_list(elements, settings['out_filename'],
+                        settings['set_delimiter'])
+
 def bom_creation(settings):
-    """ this function reads the eagle XML and processes it to produce the
+    """this function reads the eagle XML and processes it to produce the
     bill of material
     """
     #prepare differences for brd and sch files
     if 'in_filename_brd' in settings:
-        tree = ET.ElementTree(file=settings['in_filename_brd'])
+        root = ET.ElementTree(file=settings['in_filename_brd']).getroot()
         variant_find_string = "board/variantdefs/variantdef"
         part_find_string = "board/elements/element"
     elif 'in_filename_sch' in settings:
-        tree = ET.ElementTree(file=settings['in_filename_sch'])
+        root = ET.ElementTree(file=settings['in_filename_sch']).getroot()
         variant_find_string = "schematic/variantdefs/variantdef"
         part_find_string = "schematic/parts/part"
-
-    root = tree.getroot()
 
     #if eagleversion was set, just output the used version of eagle and exit
     if 'eagleversion' in settings:
@@ -328,11 +338,10 @@ def bom_creation(settings):
         # only try to get description if we use the schematic...
         # the BRD file does not contain this information
         if 'in_filename_sch' in settings:
-            description = get_description(drawing,
-                                        elem.attrib['library'],
-                                        elem.attrib['deviceset'])
-            description = get_first_line_text_from_html(description)
-            element['DESCRIPTION'] = description
+            element['DESCRIPTION'] = get_first_line_text_from_html(
+                                        get_description(drawing,
+                                            elem.attrib['library'],
+                                            elem.attrib['deviceset']))
             element['DEVICE'] = elem.attrib["device"]
             element['PACKAGE'] = get_package(drawing,
                                     elem.attrib['library'],
@@ -353,14 +362,7 @@ def bom_creation(settings):
             if ((settings['notestpads'] == False) or
                 ('TP_SIGNAL_NAME' not in element)):
                 elements.append(element)
-
-    print("writing bom of type " + settings['bom_type'])
-    if settings['bom_type'] == 'value':
-        write_value_list(elements, settings['out_filename'],
-                         settings['set_delimiter'])
-    elif settings['bom_type'] == 'part':
-        write_part_list(elements, settings['out_filename'],
-                        settings['set_delimiter'])
+    write_bom(elements, settings)
 
 def output_eagle_version(xml_root):
     """print the version of the eagle file that has been used to generate
