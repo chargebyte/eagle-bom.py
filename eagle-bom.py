@@ -31,7 +31,7 @@ def sort_colums_for_csv(column_name):
         return ord(column_name[0]) + 99
 
 def sort_dict_by_all_but_name(part):
-    """this is the sort and group function that is used for grouping the parts 
+    """this is the sort and group function that is used for grouping the parts
     by value, but only if all of the other parameters are identical"""
     part_cpy = part.copy()
     part_cpy['NAME'] = ''
@@ -41,7 +41,7 @@ def sort_dict_by_all_but_name(part):
 def sort_rows_for_csv(part):
     """this is the sort function that is used to determine the order of the
     lines of the csv"""
-    if (part['NAME'].find(',')):
+    if part['NAME'].find(','):
         stri = part['NAME'].split(',')[0]
     else:
         stri = part['NAME']
@@ -70,7 +70,7 @@ def get_keys_from_dict_list(elements):
     for element in elements:
         element_keys = element.keys()
         for key in element_keys:
-            if (not key in keys):
+            if not key in keys:
                 keys.append(key)
     return keys
 
@@ -115,18 +115,19 @@ def write_part_list(elements, filename, set_delimiter):
     all_keys_sorted = fix_position_keys + keys
     elements.sort(key=sort_rows_for_csv)
     file_pointer = open(filename, 'w')
-    dict_writer = csv.DictWriter(file_pointer, all_keys_sorted, delimiter=set_delimiter,
-                                 lineterminator = '\n')
+    dict_writer = csv.DictWriter(file_pointer, all_keys_sorted,
+                      delimiter=set_delimiter, lineterminator='\n')
 
     #write header
     dict_writer.writer.writerow(all_keys_sorted)
     #write content row by row
     for row in elements:
-      for k,v in row.items():
+      for key, val in row.items():
         #convert strings so that the dict writer can process unicode in python2
-        #try catch is used to avoid crash in python3 because "unicode" is not defined
+        #try catch is used to avoid crash in python3 because "unicode" is not
+        #defined
         try:
-            row[k] = v.encode('utf-8') if type(v) is unicode else v
+            row[key] = val.encode('utf-8') if type(val) is unicode else val
         except:
             continue
       dict_writer.writerow(row)
@@ -174,9 +175,9 @@ def get_librarypart(drawing, library, deviceset):
     """get the library part from input parameters drawing, library and deviceset
     NOTE: works for schematic trees only"""
     for library_tree in drawing.iterfind('schematic/libraries/library'):
-        if (library_tree.attrib['name'] == library):
+        if library_tree.attrib['name'] == library:
             for deviceset_tree in library_tree.iterfind('devicesets/deviceset'):
-                if (deviceset_tree.attrib['name'] == deviceset):
+                if deviceset_tree.attrib['name'] == deviceset:
                     return deviceset_tree
 
 def get_package(drawing, library, deviceset, device):
@@ -189,7 +190,7 @@ def get_package(drawing, library, deviceset, device):
             if "package" in device_tree.attrib:
                 return device_tree.attrib['package']
     return ""
-    
+
 def get_device_tree(deviceset_tree, device):
     """get the package name of a device from input parameters drawing,
     library, deviceset and device
@@ -200,7 +201,7 @@ def get_device_tree(deviceset_tree, device):
         if device_tree.attrib['name'] == device:
             return device_tree
     return None
-    
+
 def get_description(drawing, library, deviceset):
     """get the description of a deviceset from input parameters drawing, library
     and deviceset
@@ -226,10 +227,10 @@ def change_part_by_variant(part_tree, part, selected_variant):
         return
 
     for variant in part_tree.iterfind('variant'):
-        if (variant.attrib['name'] == selected_variant):
-            if ('value' in variant.attrib):
+        if variant.attrib['name'] == selected_variant:
+            if 'value' in variant.attrib:
                 part['VALUE'] = variant.attrib['value']
-            if ('populate' in variant.attrib):
+            if 'populate' in variant.attrib:
                 part['DO_NOT_PLACE'] = "yes"
 
 def get_first_line_text_from_html(html_string):
@@ -237,8 +238,7 @@ def get_first_line_text_from_html(html_string):
     """
     if html_string == None:
         return None
-    
-    p_div = re.compile(r"</?(p|div|br).*?>", 
+    p_div = re.compile(r"</?(p|div|br).*?>",
                        re.IGNORECASE | re.DOTALL)
     html_string = p_div.sub("\n", html_string)
     html_string = re.sub('<[^<]+?>', '', html_string)
@@ -250,32 +250,29 @@ def select_variant(drawing, variant_find_string, settings):
     """find all variants that are defined in the drawing
     select the most appropriate one based on settings and default
     variant"""
-    
     ##stores the actual used variant
     selected_variant = ""
     ##stores the default variant if available
     default_variant = ""
     ##stores the number of defined variants in the board file
-    number_variant = 0   
-
+    number_variant = 0
     #find all variants that are in the schematic
     for elem in drawing.iterfind(variant_find_string):
         number_variant = number_variant + 1
-        if (('current' in elem.attrib) and (elem.attrib['current']=="yes")):
+        if ('current' in elem.attrib) and (elem.attrib['current'] == "yes"):
             default_variant = elem.attrib['name']
-        if (elem.attrib['name'] == settings['set_variant']):
+        if elem.attrib['name'] == settings['set_variant']:
             selected_variant = settings['set_variant']
-            
     #find out which variant to use, if there is any
     if (selected_variant == "" and
         default_variant == "" and
         number_variant > 0):
         print ("invalid variant defined, aborting")
         return
-    elif (selected_variant == ""):
+    elif selected_variant == "":
         selected_variant = default_variant
 
-    if (number_variant > 0):
+    if number_variant > 0:
         print ("variant: " + selected_variant)
 
     return selected_variant
@@ -284,13 +281,12 @@ def bom_creation(settings):
     """ this function reads the eagle XML and processes it to produce the
     bill of material
     """
-     
     #prepare differences for brd and sch files
-    if ('in_filename_brd' in settings):
+    if 'in_filename_brd' in settings:
         tree = ET.ElementTree(file=settings['in_filename_brd'])
-        variant_find_string = "board/variantdefs/variantdef"            
+        variant_find_string = "board/variantdefs/variantdef"
         part_find_string = "board/elements/element"
-    elif ('in_filename_sch' in settings):
+    elif 'in_filename_sch' in settings:
         tree = ET.ElementTree(file=settings['in_filename_sch'])
         variant_find_string = "schematic/variantdefs/variantdef"
         part_find_string = "schematic/parts/part"
@@ -312,39 +308,36 @@ def bom_creation(settings):
     #read all elements that are on the board
     for elem in drawing.iterfind(part_find_string):
         element = {}
-        
         #check if there are attributes in the library and pull them in
-        if ('deviceset' in elem.attrib):
-            deviceset_tree = get_librarypart(drawing, elem.attrib['library'], elem.attrib['deviceset'])
-            device_tree = get_device_tree(deviceset_tree, elem.attrib['device'])
-            for technology_tree in device_tree.iter('attribute'): #find('technologies/technology/attribute'):
-                element[technology_tree.attrib['name']] = technology_tree.attrib['value']        
-
+        if 'deviceset' in elem.attrib:
+            deviceset_tree = get_librarypart(drawing, elem.attrib['library'],
+                                             elem.attrib['deviceset'])
+            device_tree = get_device_tree(deviceset_tree,
+                                          elem.attrib['device'])
+            for technology_tree in device_tree.iter('attribute'):
+                element[technology_tree.attrib['name']] = \
+                                                technology_tree.attrib['value']
         element['NAME'] = elem.attrib['name']
-        
-        if ("value" in elem.attrib):
+        if "value" in elem.attrib:
             element['VALUE'] = elem.attrib['value']
-        if ("package" in elem.attrib):
+        if "package" in elem.attrib:
             element['PACKAGE'] = elem.attrib['package']
-            
         # only try to get description if we use the schematic...
         # the BRD file does not contain this information
-        if ('in_filename_sch' in settings):
+        if 'in_filename_sch' in settings:
             description = get_description(drawing,
                                         elem.attrib['library'],
                                         elem.attrib['deviceset'])
             description = get_first_line_text_from_html(description)
             element['DESCRIPTION'] = description
-        
             element['DEVICE'] = elem.attrib["device"]
             element['PACKAGE'] = get_package(drawing,
                                     elem.attrib['library'],
                                     elem.attrib['deviceset'],
                                     elem.attrib['device'])
-            
         #get all attributes of the element
         for attribute in elem.iterfind('attribute'):
-            if ('value' in attribute.attrib):
+            if 'value' in attribute.attrib:
                 attribute_name = attribute.attrib['name'].upper()
                 attribute_value = attribute.attrib['value']
                 element[attribute_name] = attribute_value
@@ -354,14 +347,15 @@ def bom_creation(settings):
         elem.attrib['library'],
         elem.attrib['deviceset'])
         ) or 'in_filename_brd' in settings)):
-            if((settings['notestpads'] == False) or ('TP_SIGNAL_NAME' not in element)):
+            if ((settings['notestpads'] == False) or
+                ('TP_SIGNAL_NAME' not in element)):
                 elements.append(element)
 
     print("writing bom of type " + settings['bom_type'])
-    if (settings['bom_type']=='value'):
+    if settings['bom_type'] == 'value':
         write_value_list(elements, settings['out_filename'],
                          settings['set_delimiter'])
-    elif (settings['bom_type']=='part'):
+    elif settings['bom_type'] == 'part':
         write_part_list(elements, settings['out_filename'],
                         settings['set_delimiter'])
 
@@ -379,7 +373,7 @@ def parse_command_line_arguments(argv):
     settings = {}
     settings['notestpads'] = False
 
-    try:                                                                
+    try:
         opts = getopt.getopt(argv,
                                    "hc:b:t:s:v:",
                                    ["help", "csv=",
@@ -389,15 +383,14 @@ def parse_command_line_arguments(argv):
                                     "variant=",
                                     "notestpads",
                                     "eagleversion"])[0]
-    except getopt.GetoptError:                     
-        usage()                                                    
-        sys.exit(2)         
-
-    for opt, arg in opts:                                
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+    for opt, arg in opts:
         if opt in ("-h", "--help"):
             usage()
             sys.exit(0)
-        elif opt in("--notestpads"):
+        elif opt in list("--notestpads"):
             settings['notestpads'] = True
         elif opt in ("-c", "--csv"):
             settings['out_filename'] = arg
@@ -409,12 +402,12 @@ def parse_command_line_arguments(argv):
             settings['bom_type'] = arg
         elif opt in ("-v", "--variant"):
             settings['set_variant'] = arg
-        elif opt in ("--separator"):
-            if (arg == "TAB"):
+        elif opt in list("--separator"):
+            if arg == "TAB":
                 settings['set_delimiter'] = '\t'
             else:
                 settings['set_delimiter'] = arg
-        elif opt in ("--eagleversion"):
+        elif opt in list("--eagleversion"):
             settings['eagleversion'] = True
 
     return settings
@@ -430,16 +423,16 @@ def main(argv):
         usage()
         sys.exit(3)
 
-    if ('eagleversion' not in settings):
-        if ('out_filename' not in settings):
+    if 'eagleversion' not in settings:
+        if 'out_filename' not in settings:
             usage()
             sys.exit(4)
 
-        if ('set_delimiter' not in settings):
+        if 'set_delimiter' not in settings:
             print("defaulting to separator \",\"")
             settings['set_delimiter'] = ','
 
-        if ('bom_type' not in settings):
+        if 'bom_type' not in settings:
             print("defaulting to bom type 'part'")
             settings['bom_type'] = 'part'
 
