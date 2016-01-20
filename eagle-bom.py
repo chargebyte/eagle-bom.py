@@ -38,7 +38,7 @@ def sort_dict_by_all_but_name(part):
     by value, but only if all of the other parameters are identical"""
     part_cpy = part.copy()
     part_cpy['NAME'] = ''
-    part_string = str(part_cpy)
+    part_string = str(sorted(part_cpy.items()))
     return part_string
 
 def sort_rows_for_csv(part):
