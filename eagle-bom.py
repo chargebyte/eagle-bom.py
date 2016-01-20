@@ -16,7 +16,7 @@ from itertools import groupby
 import getopt
 import re
 
-column_sort_dict = {
+columnSortDict = {
         'NAME':0,
         'COUNT':1,
         'VALUE':2,
@@ -28,8 +28,8 @@ column_sort_dict = {
 def sort_colums_for_csv(column_name):
     """this is the sort function for the keys (i.e. columns) of the csv file"""
 
-    if column_name in column_sort_dict:
-        return column_sort_dict[column_name]
+    if column_name in columnSortDict:
+        return columnSortDict[column_name]
     else:
         return ord(column_name[0]) + 99
 
@@ -108,7 +108,7 @@ def write_part_list(elements, filename, set_delimiter):
 
     #remove fix position columns from keys, remember those in separate list
     fix_position_keys = []
-    for key in column_sort_dict:
+    for key in columnSortDict:
         if key in keys:
             fix_position_keys.append(key)
             keys.remove(key)
@@ -363,6 +363,9 @@ def bom_creation(settings):
                         settings['set_delimiter'])
 
 def output_eagle_version(xml_root):
+    """print the version of the eagle file that has been used to generate 
+    the eagle file
+    """
     if "version" in xml_root.attrib:
         print(xml_root.attrib['version'])
         return True
