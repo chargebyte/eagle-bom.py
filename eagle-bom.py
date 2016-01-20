@@ -16,7 +16,7 @@ from itertools import groupby
 import getopt
 import re
 
-columnSortDict = {
+COLUMNFIXEDORDER = {
         'NAME':0,
         'COUNT':1,
         'VALUE':2,
@@ -28,8 +28,8 @@ columnSortDict = {
 def sort_colums_for_csv(column_name):
     """this is the sort function for the keys (i.e. columns) of the csv file"""
 
-    if column_name in columnSortDict:
-        return columnSortDict[column_name]
+    if column_name in COLUMNFIXEDORDER:
+        return COLUMNFIXEDORDER[column_name]
     else:
         return ord(column_name[0]) + 99
 
@@ -108,7 +108,7 @@ def write_part_list(elements, filename, set_delimiter):
 
     #remove fix position columns from keys, remember those in separate list
     fix_position_keys = []
-    for key in columnSortDict:
+    for key in COLUMNFIXEDORDER:
         if key in keys:
             fix_position_keys.append(key)
             keys.remove(key)
