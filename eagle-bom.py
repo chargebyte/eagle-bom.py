@@ -376,6 +376,7 @@ def parse_command_line_arguments(argv):
     """parses the command line arguments according to usage print
     and returns everything in an associative array
     """
+    #pylint: disable=too-many-branches
     settings = {}
     settings['notestpads'] = False
 
