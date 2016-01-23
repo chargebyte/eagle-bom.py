@@ -1,21 +1,27 @@
 language: python
-sudo: false
 
 python:
-  - "2.7"
-  - "3.2"
-  - "3.3"
+- '2.7'
+- '3.2'
+- '3.3'
 
-# command to install dependencies
-install: 
-  - pip install nose
+install:
+- pip install nose
 
 addons:
   apt:
     packages:
     - pylint
- 
-# command to run tests
-script: 
-  - pylint --rcfile=.pylint.config eagle-bom.py
-  - nosetests test/
+
+script:
+- pylint --rcfile=.pylint.config eagle-bom.py
+- nosetests test/
+
+deploy:
+  provider: releases
+  api_key:
+    secure: qQCJBzz5CSyD6POinQj4TttAclzlYuZIAieLh06cvSo5THNN7UzM6WfYZ/ZhvJi5ee8WijfPF1YlqCgn7on8rXry7ZHuejhLdV1vBqttdnW2NqkMf78AMJ9bU7XtjkUf8UwR+8j6KXnYgqUxAWhZ1NU12tq8RugzkdYPzkvOG+s=
+  file: eagle-bom.py
+  on:
+    repo: I2SE/eagle-bom.py
+    tags: true
