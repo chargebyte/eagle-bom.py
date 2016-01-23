@@ -3,9 +3,13 @@ eagle-bom.py
 
 **This script is a replacement of the eagle ulp that creates a bom.**
 
-- We wrote it to get better bill of materials than the eagle ulp generates. Especially when you group the lines of your bom by part values the bundled ulp did not compare the attributes for each part. This could lead to loss of attributes. This can happen when you use 100nF capacitors at 3.3V and 50V in the same schematic and you use the attributes to specify the parameters of each part.
-eagle-bom.py solves this problem by grouping only parts with identical sets of attributes.
-- Another point where an external tool for the creation of a bill of material is usefull is the automatic generation of the bom.
+It was initially written to fix a problem that eagle had with grouping parts with the same values but different attributes. The UPL did not make two BOM lines out of this scenario. This problem does not exist any more in eagle!
+
+A side effect of using the ULP is that you do not need to have eagle on your machine that generates the releases.
+
+The script is compatible with python 2.7, 3.2 and 3.3
+
+[![Build Status](https://travis-ci.org/I2SE/eagle-bom.py.svg?branch=master)](https://travis-ci.org/I2SE/eagle-bom.py)
 
 You can use eagle-bom.py as follows:
 ------------------------------------
@@ -27,7 +31,6 @@ usage:
 	--separator=		 specify the separator that should be used as delimiter between each column in the output csv file, use 'TAB'to specify tabulator as separator
 	--notestpads		 excludes all parts that have a attriute 'TP_SIGNAL_NAME' with a value
     --eagleversion       print the version of eagle that was used to generate the board or schematic (only needs arguments for board or schematic, not for csv)
-	
 	
 	special attributes for EAGLE parts that are interpreted by this script:
 		EXCLUDEFROMBOM		parts with this attribute set to a value other than blank will be excluded from the bom
