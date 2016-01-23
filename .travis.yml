@@ -1,4 +1,5 @@
 language: python
+sudo: false
 
 python:
   - "2.7"
@@ -9,9 +10,10 @@ python:
 install: 
   - pip install nose
 
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq pylint
+addons:
+  apt:
+    packages:
+    - pylint
  
 # command to run tests
 script: 
