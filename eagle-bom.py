@@ -5,6 +5,9 @@ files to build a bill-of material
 #for compatibility between python2 and python3 in conjunction with pylint
 from __future__ import print_function
 
+__version__ = "$Revision$"
+# $Source$
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -138,6 +141,7 @@ def write_part_list(elements, filename, set_delimiter):
 
 def usage():
     """print usage messages to the command line"""
+    version()
     print("usage: ")
     print("\tmandatory arguments")
     print("\t-c / --csv=\t\t csv where you want to store the BOM")
@@ -173,6 +177,10 @@ def usage():
               "from")
     print("\t\tadditionally DNP markings from eagle variants are converted to "\
               "use the DO_NOT_PLACE format")
+
+def version():
+    """print version of the script"""
+    print("version " + __version__)
 
 def get_librarypart(drawing, library, deviceset):
     """get the library part from input parameters drawing, library and deviceset
@@ -389,13 +397,17 @@ def parse_command_line_arguments(argv):
                                     "separator=",
                                     "variant=",
                                     "notestpads",
-                                    "eagleversion"])[0]
+                                    "eagleversion",
+                                    "version"])[0]
     except getopt.GetoptError:
         usage()
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
             usage()
+            sys.exit(0)
+        elif opt == "--version":
+            version()
             sys.exit(0)
         elif opt in list("--notestpads"):
             settings['notestpads'] = True
