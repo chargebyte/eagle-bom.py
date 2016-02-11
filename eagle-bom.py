@@ -27,6 +27,8 @@ COLUMNFIXEDORDER = {
         'PROVIDED_BY':5
 }
 
+valid_bom_types = ("value", "part")
+
 def sort_colums_for_csv(column_name):
     """this is the sort function for the keys (i.e. columns) of the csv file"""
 
@@ -368,8 +370,9 @@ def usage():
     print("\t")
     print("\toptional arguments")
     print("\t-h / --help\t\t print this help")
-    print("\t-t / --type=\t\t specify the type ('value' or 'part' are valid "\
-              "values) of the output csv, default:part")
+    print("\t-t / --type=\t\t specify the type (valid types are "\
+              + ", ".join(valid_bom_types) + ""\
+              ") of the output, default:part")
     print("\t-v / --variant=\t\t specify which variant should be used, "\
               "default is to use the active variant as saved in the board file")
     print("\t--separator=\t\t specify the separator that should be used as "\
@@ -435,7 +438,8 @@ def parse_command_line_arguments(argv):
         elif opt in ("-s", "--sch"):
             settings['in_filename_sch'] = arg
         elif opt in ("-t", "--type"):
-            settings['bom_type'] = arg
+            if (arg in valid_bom_types):
+                settings['bom_type'] = arg
         elif opt in ("-v", "--variant"):
             settings['set_variant'] = arg
         elif opt in list("--separator"):
