@@ -27,7 +27,7 @@ COLUMNFIXEDORDER = {
         'PROVIDED_BY':5
 }
 
-valid_bom_types = ("value", "part")
+VALID_BOM_TYPES = ("value", "part")
 
 def sort_colums_for_csv(column_name):
     """this is the sort function for the keys (i.e. columns) of the csv file"""
@@ -131,7 +131,7 @@ def write_part_list(elements, filename, set_delimiter):
     #field 'NAME' can be a list or a string, we always need a string here...
     #joining lists together by using commas
     for element in elements:
-        if type(element['NAME'])==list:
+        if type(element['NAME']) == list:
             element['NAME'] = ",".join(element['NAME'])
 
     fix_position_keys.sort(key=sort_colums_for_csv)
@@ -154,7 +154,6 @@ def write_part_list(elements, filename, set_delimiter):
                 row[key] = val.encode('utf-8') if type(val) is unicode else val
             except NameError:
                 continue
-        
         dict_writer.writerow(row)
     return 0
 
@@ -371,7 +370,7 @@ def usage():
     print("\toptional arguments")
     print("\t-h / --help\t\t print this help")
     print("\t-t / --type=\t\t specify the type (valid types are "\
-              + ", ".join(valid_bom_types) + ""\
+              + ", ".join(VALID_BOM_TYPES) + ""\
               ") of the output, default:part")
     print("\t-v / --variant=\t\t specify which variant should be used, "\
               "default is to use the active variant as saved in the board file")
@@ -438,7 +437,7 @@ def parse_command_line_arguments(argv):
         elif opt in ("-s", "--sch"):
             settings['in_filename_sch'] = arg
         elif opt in ("-t", "--type"):
-            if (arg in valid_bom_types):
+            if arg in VALID_BOM_TYPES:
                 settings['bom_type'] = arg
             else:
                 sys.exit(5)
