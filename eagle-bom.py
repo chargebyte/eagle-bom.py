@@ -440,6 +440,8 @@ def parse_command_line_arguments(argv):
         elif opt in ("-t", "--type"):
             if (arg in valid_bom_types):
                 settings['bom_type'] = arg
+            else:
+                sys.exit(5)
         elif opt in ("-v", "--variant"):
             settings['set_variant'] = arg
         elif opt in list("--separator"):
