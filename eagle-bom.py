@@ -129,7 +129,8 @@ def write_part_list(elements, filename, set_delimiter):
     #field 'NAME' can be a list or a string, we always need a string here...
     #joining lists together by using commas
     for element in elements:
-        element['NAME'] = ",".join(element['NAME'])
+        if type(element['NAME'])==list:
+            element['NAME'] = ",".join(element['NAME'])
 
     fix_position_keys.sort(key=sort_colums_for_csv)
     keys.sort()
