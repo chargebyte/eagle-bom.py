@@ -156,49 +156,6 @@ def write_part_list(elements, filename, set_delimiter):
         dict_writer.writerow(row)
     return 0
 
-def usage():
-    """print usage messages to the command line"""
-    version()
-    print("usage: ")
-    print("\tmandatory arguments")
-    print("\t-c / --csv=\t\t csv where you want to store the BOM")
-    print("\texclusive mandatory arguments (i.e. choose one of the following)")
-    print("\t-b / --brd=\t\t eagle board file that you want to use as "\
-              "input for the BOM")
-    print("\t-s / --sch=\t\t eagle schematic file that you want to use "\
-              "as input for the BOM")
-    print("\t")
-    print("\toptional arguments")
-    print("\t-h / --help\t\t print this help")
-    print("\t-t / --type=\t\t specify the type ('value' or 'part' are valid "\
-              "values) of the output csv, default:part")
-    print("\t-v / --variant=\t\t specify which variant should be used, "\
-              "default is to use the active variant as saved in the board file")
-    print("\t--separator=\t\t specify the separator that should be used as "\
-              "delimiter between each column in the output csv file, use 'TAB'"\
-              "to specify tabulator as separator")
-    print("\t--notestpads\t\t excludes all parts that have a attriute "\
-              "'TP_SIGNAL_NAME' with a value")
-    print("\t--eagleversion\t\t print the version of eagle that was used to "\
-              "generate the board or schematic (only needs arguments for "\
-              "board or schematic, not for csv")
-    print("\t")
-    print("\t")
-    print("\tspecial attributes for EAGLE parts that are interpreted by this "\
-              "script:")
-    print("\t\tEXCLUDEFROMBOM\t\tparts with this attribute set to a value "\
-              "other than blank will be excluded from the bom")
-    print("\t\tDO_NOT_PLACE\t\tusually should have the value 'yes' for "\
-              "instructing the manufacturer to leave this part unplaced")
-    print("\t\tPROVIDED_BY\t\tspecify where the manufacturer gets the parts "\
-              "from")
-    print("\t\tadditionally DNP markings from eagle variants are converted to "\
-              "use the DO_NOT_PLACE format")
-
-def version():
-    """print version of the script"""
-    print("version " + __version__)
-
 def get_librarypart(drawing, library, deviceset):
     """get the library part from input parameters drawing, library and deviceset
     NOTE: works for schematic trees only"""
@@ -396,6 +353,49 @@ def output_eagle_version(xml_root):
         return True
 
     return False
+
+def usage():
+    """print usage messages to the command line"""
+    version()
+    print("usage: ")
+    print("\tmandatory arguments")
+    print("\t-c / --csv=\t\t csv where you want to store the BOM")
+    print("\texclusive mandatory arguments (i.e. choose one of the following)")
+    print("\t-b / --brd=\t\t eagle board file that you want to use as "\
+              "input for the BOM")
+    print("\t-s / --sch=\t\t eagle schematic file that you want to use "\
+              "as input for the BOM")
+    print("\t")
+    print("\toptional arguments")
+    print("\t-h / --help\t\t print this help")
+    print("\t-t / --type=\t\t specify the type ('value' or 'part' are valid "\
+              "values) of the output csv, default:part")
+    print("\t-v / --variant=\t\t specify which variant should be used, "\
+              "default is to use the active variant as saved in the board file")
+    print("\t--separator=\t\t specify the separator that should be used as "\
+              "delimiter between each column in the output csv file, use 'TAB'"\
+              "to specify tabulator as separator")
+    print("\t--notestpads\t\t excludes all parts that have a attriute "\
+              "'TP_SIGNAL_NAME' with a value")
+    print("\t--eagleversion\t\t print the version of eagle that was used to "\
+              "generate the board or schematic (only needs arguments for "\
+              "board or schematic, not for csv")
+    print("\t")
+    print("\t")
+    print("\tspecial attributes for EAGLE parts that are interpreted by this "\
+              "script:")
+    print("\t\tEXCLUDEFROMBOM\t\tparts with this attribute set to a value "\
+              "other than blank will be excluded from the bom")
+    print("\t\tDO_NOT_PLACE\t\tusually should have the value 'yes' for "\
+              "instructing the manufacturer to leave this part unplaced")
+    print("\t\tPROVIDED_BY\t\tspecify where the manufacturer gets the parts "\
+              "from")
+    print("\t\tadditionally DNP markings from eagle variants are converted to "\
+              "use the DO_NOT_PLACE format")
+
+def version():
+    """print version of the script"""
+    print("version " + __version__)
 
 def parse_command_line_arguments(argv):
     """parses the command line arguments according to usage print
