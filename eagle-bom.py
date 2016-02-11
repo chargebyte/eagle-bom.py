@@ -17,6 +17,7 @@ import sys
 from itertools import groupby
 import getopt
 import re
+import cairo
 
 COLUMNFIXEDORDER = {
         'NAME':0,
@@ -27,7 +28,61 @@ COLUMNFIXEDORDER = {
         'PROVIDED_BY':5
 }
 
-VALID_BOM_TYPES = ("value", "part")
+VALID_BOM_TYPES = ("value", "part", "sticker")
+
+# Label settings (all dimensions in mm)
+LABEL_WIDTH = 72
+LABEL_HEIGHT = 63.5
+LABELS_X = 4
+LABELS_Y = 3
+MARGIN_TOP = 7.75
+MARGIN_LEFT = 4.5
+SPACING_X = 0.0
+SPACING_Y = 2.0
+PAGE_WIDTH = 297
+PAGE_HEIGHT = 210
+
+
+class Line:
+    def __init__(self, refs, value, footprint, supplier, code):
+        self.refs = refs
+        self.value = value
+        self.footprint = footprint
+        self.supplier = supplier
+        self.code = code
+
+    def render(self, cr, where, w, h):
+        cr.save()
+
+        # Clip to permissible area
+        cr.rectangle(where[0], where[1], w, h)
+        cr.clip()
+
+        # Draw first line
+        cr.set_source_rgb(0, 0, 0)
+        cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
+                            cairo.FONT_WEIGHT_BOLD)
+        cr.set_font_size(3.0)
+        cr.move_to(where[0]+3, where[1]+5)
+        cr.show_text(" ".join(self.refs))
+
+        # Draw second line
+        cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
+                            cairo.FONT_WEIGHT_NORMAL)
+        cr.set_font_size(3.0)
+        cr.move_to(where[0]+3, where[1]+9)
+        cr.show_text("{}x  {}  {}"
+                     .format(len(self.refs), self.value, self.footprint))
+
+        # Draw third line
+        cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
+                            cairo.FONT_WEIGHT_NORMAL)
+        cr.set_font_size(3.0)
+        cr.move_to(where[0]+3, where[1]+12)
+        cr.show_text("{} {}".format(self.supplier, self.code))
+
+        cr.restore()
+
 
 def sort_colums_for_csv(column_name):
     """this is the sort function for the keys (i.e. columns) of the csv file"""
@@ -108,6 +163,44 @@ def get_value_list(elements):
         grouped_element['COUNT'] = count
         grouped_elements.append(grouped_element)
     return grouped_elements
+
+def sheet_positions(cr, label_width, label_height, labels_x, labels_y,
+                    margin_top, margin_left, spacing_x, spacing_y):
+    """Forever yields a new (x, y) of successive label top-left positions,
+    calling cr.show_page() when the current page is exhausted.
+    """
+    while True:
+        for x in range(labels_x):
+            for y in range(labels_y):
+                xx = margin_left + x*(label_width + spacing_x)
+                yy = margin_top + y*(label_height + spacing_y)
+                yield (xx, yy)
+        cr.show_page()
+
+def write_sticker_list(elements, filename):
+    """output bom as stickers for each type of component in pdf format"""
+    elements_grouped = get_value_list(elements)
+
+    mm_to_pt = 2.835
+    ps = cairo.PDFSurface(filename, PAGE_WIDTH*mm_to_pt, PAGE_HEIGHT*mm_to_pt)
+    cr = cairo.Context(ps)
+
+    # Scale user units to millimetres
+    cr.scale(1/0.3528, 1/0.3528)
+
+    labels = sheet_positions(cr, LABEL_WIDTH, LABEL_HEIGHT,
+                             LABELS_X, LABELS_Y, MARGIN_TOP, MARGIN_LEFT,
+                             SPACING_X, SPACING_Y)
+
+    bom = []
+    for line in elements_grouped:
+        bom.append(Line(line['NAME'], line['VALUE'], line['PACKAGE'], "", ""))
+
+    for line, label in zip(bom, labels):
+        line.render(cr, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
+        #pcb.render(cr, (label[0]+1, label[1]+14), label_width-2,
+        #           label_height-14, line.refs)
+    cr.show_page()
 
 def write_value_list(elements, filename, set_delimiter):
     """group equal elements together and write to 'filename' as csv file
@@ -274,6 +367,8 @@ def write_bom(elements, settings):
     elif settings['bom_type'] == 'part':
         write_part_list(elements, settings['out_filename'],
                         settings['set_delimiter'])
+    elif settings['bom_type'] == 'sticker':
+        write_sticker_list(elements, settings['out_filename'])
 
 def bom_creation(settings):
     """this function reads the eagle XML and processes it to produce the
