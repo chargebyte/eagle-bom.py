@@ -79,9 +79,11 @@ def get_keys_from_dict_list(elements):
                 keys.append(key)
     return keys
 
-def write_value_list(elements, filename, set_delimiter):
+def get_value_list(elements):
     """group elements by value if they have the same attributes otherwise
-    and write to 'filename' as csv file"""
+    and return the elements list reduced to one line per different component
+    where the NAME field will be a list of all parts that are using the same
+    component"""
     elements.sort(key=sort_dict_by_all_but_name)
 
     groups = []
@@ -94,12 +96,21 @@ def write_value_list(elements, filename, set_delimiter):
     for group in groups:
         group.sort(key=sort_dict_name_by_number)
         grouped_element = group.pop(0)
+        first_name = grouped_element['NAME']
+        grouped_element['NAME'] = list()
+        grouped_element['NAME'].append(first_name)
         count = 1
         for element in group:
-            grouped_element['NAME'] += ','+element['NAME']
+            grouped_element['NAME'].append(element['NAME'])
             count += 1
         grouped_element['COUNT'] = count
         grouped_elements.append(grouped_element)
+    return grouped_elements
+
+def write_value_list(elements, filename, set_delimiter):
+    """group equal elements together and write to 'filename' as csv file
+    """
+    grouped_elements = get_value_list(elements)
     return write_part_list(grouped_elements, filename, set_delimiter)
 
 
@@ -114,6 +125,11 @@ def write_part_list(elements, filename, set_delimiter):
         if key in keys:
             fix_position_keys.append(key)
             keys.remove(key)
+
+    #field 'NAME' can be a list or a string, we always need a string here...
+    #joining lists together by using commas
+    for element in elements:
+        element['NAME'] = ",".join(element['NAME'])
 
     fix_position_keys.sort(key=sort_colums_for_csv)
     keys.sort()
@@ -135,6 +151,7 @@ def write_part_list(elements, filename, set_delimiter):
                 row[key] = val.encode('utf-8') if type(val) is unicode else val
             except NameError:
                 continue
+        
         dict_writer.writerow(row)
     return 0
 
