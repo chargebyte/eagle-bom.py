@@ -5,8 +5,7 @@ files to build a bill-of material
 #for compatibility between python2 and python3 in conjunction with pylint
 from __future__ import print_function
 
-__version__ = "$Revision$"
-# $Source$
+__version__ = "0.2.0"
 
 try:
     import xml.etree.cElementTree as ET
