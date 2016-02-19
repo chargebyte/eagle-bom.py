@@ -18,6 +18,7 @@ from itertools import groupby
 import getopt
 import re
 import cairo
+import math
 
 COLUMNFIXEDORDER = {
         'NAME':0,
@@ -41,6 +42,305 @@ SPACING_X = 0.0
 SPACING_Y = 2.0
 PAGE_WIDTH = 297
 PAGE_HEIGHT = 210
+
+class Module:
+    def __init__(self, mod, lib):
+        self.lines = []
+        self.circs = []
+        self.bounds = []
+        self._parse(mod, lib)
+
+    def render(self, cr):
+        """"
+        Render the footprint in the board coordinate system.
+        """
+        cr.save()
+        cr.translate(self.at[0], self.at[1])
+        print(self.at)
+        cr.set_line_width(0.1)
+        if len(self.at) >= 3:
+            cr.rotate(-self.at[2] * math.pi/180)
+        if self.lines or self.circs:
+            for line in self.lines:
+                cr.move_to(*line[0])
+                cr.line_to(*line[1])
+                cr.stroke()
+            for circ in self.circs:
+                r = math.sqrt((circ[0][0] - circ[1][0])**2 +
+                              (circ[0][1] - circ[1][1])**2)
+                cr.new_sub_path()
+                cr.arc(circ[0][0], circ[0][1], r, 0, 2*math.pi)
+        cr.restore()
+
+    def render_highlight(self, cr):
+        """
+        Render a highlight at the footprint's position and of its size.
+        """
+        cr.save()
+        cr.translate(self.at[0], self.at[1])
+        if len(self.at) == 3:
+            cr.rotate(-self.at[2] * math.pi/180)
+        x1, y1, x2, y2 = self.bounds
+        a = 0.2
+        x1 -= a
+        y1 -= a
+        x2 += a
+        y2 += a
+        r = 0.5
+        pi2 = math.pi / 2.0
+        cr.new_sub_path()
+        cr.arc(x1+r, y1+r, r, 2*pi2, 3*pi2)
+        cr.arc(x2-r, y1+r, r, 3*pi2, 4*pi2)
+        cr.arc(x2-r, y2-r, r, 0*pi2, 1*pi2)
+        cr.arc(x1+r, y2-r, r, 1*pi2, 2*pi2)
+        cr.close_path()
+        cr.fill()
+        cr.restore()
+
+    def _parse(self, mod, libs):
+        mod_library = mod.attrib['library']
+        mod_footprint = mod.attrib['package']
+        self.at = [float(mod.attrib['x']), float(mod.attrib['y'])]
+        self.ref = mod.attrib['name']
+        #TODO: add handling for mirroring and rotation in eagle
+        mirrored = False
+        angle = 0
+        if "rot" in mod.attrib:
+            rot = mod.attrib['rot']
+            if rot[0] == "M":
+                mirrored = True
+                angle = float(rot[2:])
+            else:
+                angle = float(rot[1:])
+        self.at.append(angle)
+        self.at.append(mirrored)
+        self.bounds = [0, 0, 0, 0]
+        for library in libs.iterfind("library"):
+            if library.attrib['name'] == mod_library:
+                for footprint in library.iterfind("packages/package"):
+                    if footprint.attrib['name'] == mod_footprint:
+                        self._parse_graphic(footprint)
+
+
+
+
+
+    def _parse_graphic(self, footprint):
+        for wire in footprint.iterfind("wire"):
+            if wire.attrib['layer'] in ('21', '51'):
+                start = (float(wire.attrib['x1']), float(wire.attrib['y1']))
+                end   = (float(wire.attrib['x2']), float(wire.attrib['y2']))
+                self._update_bounds(start)
+                self._update_bounds(end)
+                self.lines.append((start, end))
+        for rectangle in footprint.iterfind("rectangle"):
+            if rectangle.attrib['layer'] in ('21', '51'):
+                start = (float(rectangle.attrib['x1']), float(rectangle.attrib['y1']))
+                end = (float(rectangle.attrib['x2']), float(rectangle.attrib['y2']))
+                self._update_bounds(start)
+                self._update_bounds(end)
+                self.lines.append((start, (end[0], start[1])))
+                self.lines.append(((end[0], start[1]), end))
+                self.lines.append((end, (start[0], end[1])))
+                self.lines.append(((start[0], end[1]), start))
+
+    def _update_bounds(self, at):
+        self.bounds[0] = min(self.bounds[0], at[0])
+        self.bounds[1] = min(self.bounds[1], at[1])
+        self.bounds[2] = max(self.bounds[2], at[0])
+        self.bounds[3] = max(self.bounds[3], at[1])
+
+#TODO: PCB is mirrored (upside down), which is caused by cairo defining y from top to bottom while eagle has y defined from bottom to top
+class PCB:
+    def __init__(self, board):
+        self.modules = []
+        self.edge_lines = []
+        self.edge_arcs = []
+        self._parse(board)
+
+    def render(self, cr, where, max_w, max_h, highlights=None):
+        """
+        Render the PCB, with the top left corner at `where`,
+        occupying at most `max_w` width and `max_h` height,
+        and draw a highlight under parts whose reference is in `highlights`.
+        """
+        cr.save()
+        cr.set_line_width(0.1)
+
+        # Set a clip to ensure we occupy at most max_w and max_h
+        cr.rectangle(where[0], where[1], max_w, max_h)
+        cr.clip()
+
+        # Find bounds on highlighted modules
+        hl_bounds = self._find_highlighted_bounds(highlights)
+        bound_width = hl_bounds[2] - hl_bounds[0]
+        bound_height = hl_bounds[3] - hl_bounds[1]
+        bound_centre_x = hl_bounds[0] + bound_width/2
+        bound_centre_y = hl_bounds[1] + bound_height/2
+
+        #TODO: until scaling to the bound of highlighted parts works (above) we set this to the maximum size of the PCB
+        bound_width = self.width
+        bound_height = self.height
+        hl_bounds = self.bounds
+        bound_centre_x = hl_bounds[0] + bound_width/2
+        bound_centre_y = hl_bounds[1] + bound_height/2
+
+        # Scale to fit bounds
+        scale_x = max_w / bound_width
+        scale_y = max_h / bound_height
+        scale = min(scale_x, scale_y)
+        cr.scale(scale, scale)
+
+        # Can we shift the top edge of the PCB to the top and not cut off
+        # the bottom of the highlight?
+        if hl_bounds[3] - self.bounds[1] < max_h/scale:
+            shift_y = -self.bounds[1]
+
+        # Can we shift the bottom edge of the PCB to the bottom and not cut off
+        # the top of the highlight?
+        elif self.bounds[3] - hl_bounds[1] < max_h/scale:
+            shift_y = -self.bounds[3] + max_h/scale
+
+        # Otherwise centre the highlighted region vertically
+        else:
+            shift_y = (max_h/(2*scale))-bound_centre_y
+
+        # Can we shift the left edge of the PCB to the left and not cut off
+        # the right of the highlight?
+        if hl_bounds[2] - self.bounds[0] < max_w/scale:
+            shift_x = -self.bounds[0]
+
+        # Can we shift the right edge of the PCB to the right and not cut off
+        # the left of the highlight?
+        elif self.bounds[2] - hl_bounds[0] < max_w/scale:
+            shift_x = -self.bounds[2] + max_w/scale
+
+        # Otherwise centre the highlighted region horizontally
+        else:
+            shift_x = (max_w/(2*scale))-bound_centre_x
+
+        cr.translate(shift_x, shift_y)
+
+        # Translate our origin to desired position on page
+        cr.translate(where[0]/scale, where[1]/scale)
+
+        # Render highlights below everything else
+        cr.set_source_rgb(1.0, 0.5, 0.5)
+        for module in self.modules:
+            if module.ref in highlights:
+                module.render_highlight(cr)
+
+        # Render modules
+        cr.set_source_rgb(0, 0, 0)
+        for module in self.modules:
+            module.render(cr)
+
+        # Render edge lines
+        for line in self.edge_lines:
+            cr.move_to(*line[0])
+            cr.line_to(*line[1])
+            cr.stroke()
+
+        # Render edge arcs
+        for arc in self.edge_arcs:
+            cr.new_sub_path()
+            cr.arc(*arc)
+            cr.stroke()
+
+        cr.restore()
+
+    def _find_highlighted_bounds(self, highlights):
+        # Find bounds on highlighted modules
+        # TODO: Deal with rotation in modules in a more elegant fashion
+        # (Rotation includes bounds, so here we just take the biggest bound,
+        #  which is both wasteful for high aspect ratio parts, and wrong for
+        #  parts not on a 90' rotation).
+        # TODO: adapt to eagle
+        hl_bounds = [self.bounds[2], self.bounds[3],
+                     self.bounds[0], self.bounds[1]]
+        for module in self.modules:
+            if module.ref not in highlights:
+                continue
+            a = max(module.bounds) * 2
+            hl_bounds[0] = min(hl_bounds[0], module.at[0] - a)
+            hl_bounds[1] = min(hl_bounds[1], module.at[1] - a)
+            hl_bounds[2] = max(hl_bounds[2], module.at[0] + a)
+            hl_bounds[3] = max(hl_bounds[3], module.at[1] + a)
+        return hl_bounds
+
+    def _parse(self, board):
+        self.bounds = self._parse_edges(board)
+
+        #TODO: rewrite for eagle parsing, also think about that bounds should be updated if parts overlap the PCB outline
+        #for module in sexp.find_all(board, "module"):
+        #    self.modules.append(Module(module))
+        libraries = board.find("board/libraries")
+        for module in board.iterfind("board/elements/element"):
+            self.modules.append(Module(module,libraries))
+
+        self.width = self.bounds[2] - self.bounds[0]
+        self.height = self.bounds[3] - self.bounds[1]
+
+    def _parse_edges(self, board):
+        min_x =  None
+        max_x =  None
+        min_y =  None
+        max_y =  None
+        
+        for line in board.iterfind("board/plain/wire"):
+            if "layer" in line.attrib and line.attrib['layer'] == "20":
+                x1 = float(line.attrib['x1'])
+                x2 = float(line.attrib['x2'])
+                y1 = float(line.attrib['y1'])
+                y2 = float(line.attrib['y2'])
+                if min_x == None:
+                    min_x = x1
+                    max_x = x1
+                    min_y = y1
+                    max_y = y1
+
+                min_x = min(x1, min_x)
+                min_x = min(x2, min_x)
+                max_x = max(x1, max_x)
+                max_x = max(x2, max_x)
+
+                min_y = min(y1, min_y)
+                min_y = min(y2, min_y)
+                max_y = max(y1, max_y)
+                max_y = max(y2, max_y)
+
+                start = [x1, y1]
+                end   = [x2, y2]
+                #TODO also implement arcs
+                self.edge_lines.append((start,end))
+
+        #for graphic in sexp.find_all(board, "gr_line", "gr_arc", "gr_circle"):
+        #    layer = sexp.find(graphic, "layer")[1]
+        #    if layer != "Edge.Cuts":
+        #        continue
+        #    if graphic[0] == "gr_line":
+        #        start = [float(x) for x in sexp.find(graphic, "start")[1:]]
+        #        end = [float(x) for x in sexp.find(graphic, "end")[1:]]
+        #        self.edge_lines.append((start, end))
+        #    elif graphic[0] == "gr_arc":
+        #        center = [float(x) for x in sexp.find(graphic, "start")[1:]]
+        #        start = [float(x) for x in sexp.find(graphic, "end")[1:]]
+        #        r = math.sqrt((center[0] - start[0])**2 +
+        #                      (center[1] - start[1])**2)
+        #        angle = float(sexp.find(graphic, "angle")[1]) * math.pi/180.0
+        #        dx = start[0] - center[0]
+        #        dy = start[1] - center[1]
+        #        start_angle = math.atan2(dy, dx)
+        #        end_angle = start_angle + angle
+        #        self.edge_arcs.append((center[0], center[1], r,
+        #                               start_angle, end_angle))
+        #    elif graphic[0] == "gr_circle":
+        #        center = [float(x) for x in sexp.find(graphic, "center")[1:]]
+        #        end = [float(x) for x in sexp.find(graphic, "end")[1:]]
+        #        r = math.sqrt((center[0] - end[0])**2 +
+        #                      (center[1] - end[1])**2)
+        #        self.edge_arcs.append((center[0], center[1], r, 0, 2*math.pi))
+        return [min_x,min_y,max_x,max_y]
 
 
 class Line:
@@ -177,7 +477,7 @@ def sheet_positions(cr, label_width, label_height, labels_x, labels_y,
                 yield (xx, yy)
         cr.show_page()
 
-def write_sticker_list(elements, filename):
+def write_sticker_list(elements, filename, pcb):
     """output bom as stickers for each type of component in pdf format"""
     elements_grouped = get_value_list(elements)
 
@@ -198,8 +498,8 @@ def write_sticker_list(elements, filename):
 
     for line, label in zip(bom, labels):
         line.render(cr, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
-        #pcb.render(cr, (label[0]+1, label[1]+14), label_width-2,
-        #           label_height-14, line.refs)
+        pcb.render(cr, (label[0]+1, label[1]+14), LABEL_WIDTH-2,
+                   LABEL_HEIGHT-14, line.refs)
     cr.show_page()
 
 def write_value_list(elements, filename, set_delimiter):
@@ -356,7 +656,7 @@ def select_variant(drawing, variant_find_string, settings):
 
     return selected_variant
 
-def write_bom(elements, settings):
+def write_bom(elements, settings, pcb):
     """with a prepared list of all BOM elements this function looks at settings
     and calls the matching internal function that exports those list to the
     desired BOM format"""
@@ -368,7 +668,7 @@ def write_bom(elements, settings):
         write_part_list(elements, settings['out_filename'],
                         settings['set_delimiter'])
     elif settings['bom_type'] == 'sticker':
-        write_sticker_list(elements, settings['out_filename'])
+        write_sticker_list(elements, settings['out_filename'], pcb)
 
 def bom_creation(settings):
     """this function reads the eagle XML and processes it to produce the
@@ -379,6 +679,7 @@ def bom_creation(settings):
         root = ET.ElementTree(file=settings['in_filename_brd']).getroot()
         variant_find_string = "board/variantdefs/variantdef"
         part_find_string = "board/elements/element"
+        pcb = PCB(root[0])
     elif 'in_filename_sch' in settings:
         root = ET.ElementTree(file=settings['in_filename_sch']).getroot()
         variant_find_string = "schematic/variantdefs/variantdef"
@@ -438,7 +739,7 @@ def bom_creation(settings):
           and (settings['notestpads'] == False
           or 'TP_SIGNAL_NAME' not in element)):
             elements.append(element)
-    write_bom(elements, settings)
+    write_bom(elements, settings, pcb)
 
 def output_eagle_version(xml_root):
     """print the version of the eagle file that has been used to generate
