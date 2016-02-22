@@ -109,7 +109,6 @@ class Module:
         mod_footprint = mod.attrib['package']
         self.at = [float(mod.attrib['x']), -float(mod.attrib['y'])]
         self.ref = mod.attrib['name']
-        #TODO: add handling for mirroring and rotation in eagle
         mirrored = False
         angle = 0
         if "rot" in mod.attrib:
@@ -194,10 +193,13 @@ class PCB:
         bound_centre_y = hl_bounds[1] + bound_height/2
 
         # Scale to fit bounds
-        scale_x = max_w / bound_width
-        scale_y = max_h / bound_height
-        scale = min(scale_x, scale_y, 3)
-        cr.scale(scale, scale)
+        if bound_width > 0 and bound_height > 0:
+            scale_x = max_w / bound_width
+            scale_y = max_h / bound_height
+            scale = min(scale_x, scale_y, 3)
+            cr.scale(scale, scale)
+        else:
+            scale = 1
 
         # Can we shift the top edge of the PCB to the top and not cut off
         # the bottom of the highlight?
@@ -263,7 +265,6 @@ class PCB:
         # (Rotation includes bounds, so here we just take the biggest bound,
         #  which is both wasteful for high aspect ratio parts, and wrong for
         #  parts not on a 90' rotation).
-        # TODO: adapt to eagle
         hl_bounds = [self.bounds[2], self.bounds[3],
                      self.bounds[0], self.bounds[1]]
         for module in self.modules:
@@ -287,6 +288,61 @@ class PCB:
         self.width = self.bounds[2] - self.bounds[0]
         self.height = self.bounds[3] - self.bounds[1]
 
+    def _get_angle(self, x1,y1,x2,y2):
+        x_diff = x2-x1
+        y_diff = y2-y1
+
+        if x_diff != 0:
+            angle = math.degrees(math.atan(y_diff / x_diff))
+        else:
+            angle = 90
+
+        if (x2 < x1):
+            angle += 180
+        elif (x2==x1 and y2<y1):
+            angle += 180
+
+        return angle
+
+    def _add_curved_line(self, start,end,curve):
+        print(curve)
+        x1 = start[0]
+        y1 = start[1]
+        x2 = end[0]
+        y2 = end[1]
+        #middle between start and end point
+        x_mid = (x1 + x2) / 2
+        y_mid = (y1 + y2) / 2
+
+        #difference between the points to calculate the angle of the direct line
+        angle = self._get_angle(x1,y1,x2,y2)
+
+
+        #add angle between mid and center points which is 90 degrees
+        angle += 90
+          
+        #distance from point 1 to the middle point
+        dist_1_mid = ((x1-x_mid)**2 + (y1-y_mid)**2)**0.5
+
+        #distance from the middle point to the center of the circle
+        dist_mid_center = dist_1_mid / math.tan(math.radians(curve/2))
+
+        x_center = x_mid + dist_mid_center * math.cos(math.radians(angle))
+        y_center = y_mid + dist_mid_center * math.sin(math.radians(angle))
+
+        radius = ( (x_center - x1)**2 + (y_center - y1)**2)**0.5
+
+        #get angle from center to start and end
+        angle_start = self._get_angle(x_center, y_center, x1, y1)
+        angle_end   = self._get_angle(x_center, y_center, x2, y2)
+
+        if curve > 0:
+            self.edge_arcs.append((x_center, y_center, radius,
+                                       math.radians(angle_start), math.radians(angle_end)))
+        else:
+            self.edge_arcs.append((x_center, y_center, radius,
+                                       math.radians(angle_end), math.radians(angle_start)))
+
     def _parse_edges(self, board):
         min_x =  None
         max_x =  None
@@ -299,6 +355,10 @@ class PCB:
                 x2 = float(line.attrib['x2'])
                 y1 = -float(line.attrib['y1'])
                 y2 = -float(line.attrib['y2'])
+                if "curve" in line.attrib:
+                    curve = -float(line.attrib['curve'])
+                else:
+                    curve = 0.0
                 if min_x == None:
                     min_x = x1
                     max_x = x1
@@ -317,35 +377,12 @@ class PCB:
 
                 start = [x1, y1]
                 end   = [x2, y2]
-                #TODO also implement arcs
-                self.edge_lines.append((start,end))
 
-        #for graphic in sexp.find_all(board, "gr_line", "gr_arc", "gr_circle"):
-        #    layer = sexp.find(graphic, "layer")[1]
-        #    if layer != "Edge.Cuts":
-        #        continue
-        #    if graphic[0] == "gr_line":
-        #        start = [float(x) for x in sexp.find(graphic, "start")[1:]]
-        #        end = [float(x) for x in sexp.find(graphic, "end")[1:]]
-        #        self.edge_lines.append((start, end))
-        #    elif graphic[0] == "gr_arc":
-        #        center = [float(x) for x in sexp.find(graphic, "start")[1:]]
-        #        start = [float(x) for x in sexp.find(graphic, "end")[1:]]
-        #        r = math.sqrt((center[0] - start[0])**2 +
-        #                      (center[1] - start[1])**2)
-        #        angle = float(sexp.find(graphic, "angle")[1]) * math.pi/180.0
-        #        dx = start[0] - center[0]
-        #        dy = start[1] - center[1]
-        #        start_angle = math.atan2(dy, dx)
-        #        end_angle = start_angle + angle
-        #        self.edge_arcs.append((center[0], center[1], r,
-        #                               start_angle, end_angle))
-        #    elif graphic[0] == "gr_circle":
-        #        center = [float(x) for x in sexp.find(graphic, "center")[1:]]
-        #        end = [float(x) for x in sexp.find(graphic, "end")[1:]]
-        #        r = math.sqrt((center[0] - end[0])**2 +
-        #                      (center[1] - end[1])**2)
-        #        self.edge_arcs.append((center[0], center[1], r, 0, 2*math.pi))
+                if curve == 0:
+                    self.edge_lines.append((start,end))
+                else:
+                    self._add_curved_line(start, end, curve)
+
         return [min_x,min_y,max_x,max_y]
 
 
@@ -499,6 +536,7 @@ def write_sticker_list(elements, filename, pcb):
                              SPACING_X, SPACING_Y)
 
     bom = []
+    #TODO: remove DNP and EXCLUDE_FROM_BOM parts
     for line in elements_grouped:
         bom.append(Line(line['NAME'], line['VALUE'], line['PACKAGE'], "", ""))
 
