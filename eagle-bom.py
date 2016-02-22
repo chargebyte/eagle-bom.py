@@ -60,7 +60,6 @@ class Module:
 
         cr.save()
         cr.translate(self.at[0], self.at[1])
-        print(self.at)
         cr.set_line_width(0.05)
         if len(self.at) >= 3:
             cr.rotate(-self.at[2] * math.pi/180)
@@ -86,7 +85,7 @@ class Module:
 
         cr.save()
         cr.translate(self.at[0], self.at[1])
-        if len(self.at) == 3:
+        if len(self.at) >= 3:
             cr.rotate(-self.at[2] * math.pi/180)
         x1, y1, x2, y2 = self.bounds
         a = 0.2
@@ -195,16 +194,16 @@ class PCB:
         bound_centre_y = hl_bounds[1] + bound_height/2
 
         #TODO: until scaling to the bound of highlighted parts works (above) we set this to the maximum size of the PCB
-        bound_width = self.width
-        bound_height = self.height
-        hl_bounds = self.bounds
-        bound_centre_x = hl_bounds[0] + bound_width/2
-        bound_centre_y = hl_bounds[1] + bound_height/2
+        #bound_width = self.width
+        #bound_height = self.height
+        #hl_bounds = self.bounds
+        #bound_centre_x = hl_bounds[0] + bound_width/2
+        #bound_centre_y = hl_bounds[1] + bound_height/2
 
         # Scale to fit bounds
         scale_x = max_w / bound_width
         scale_y = max_h / bound_height
-        scale = min(scale_x, scale_y)
+        scale = min(scale_x, scale_y, 3)
         cr.scale(scale, scale)
 
         # Can we shift the top edge of the PCB to the top and not cut off
