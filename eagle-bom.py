@@ -193,13 +193,6 @@ class PCB:
         bound_centre_x = hl_bounds[0] + bound_width/2
         bound_centre_y = hl_bounds[1] + bound_height/2
 
-        #TODO: until scaling to the bound of highlighted parts works (above) we set this to the maximum size of the PCB
-        #bound_width = self.width
-        #bound_height = self.height
-        #hl_bounds = self.bounds
-        #bound_centre_x = hl_bounds[0] + bound_width/2
-        #bound_centre_y = hl_bounds[1] + bound_height/2
-
         # Scale to fit bounds
         scale_x = max_w / bound_width
         scale_y = max_h / bound_height
