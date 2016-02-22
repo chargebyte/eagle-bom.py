@@ -54,10 +54,14 @@ class Module:
         """"
         Render the footprint in the board coordinate system.
         """
+        #if package is on bottom do not render anything
+        if len(self.at)==4 and self.at[3] == True:
+            return
+
         cr.save()
         cr.translate(self.at[0], self.at[1])
         print(self.at)
-        cr.set_line_width(0.1)
+        cr.set_line_width(0.05)
         if len(self.at) >= 3:
             cr.rotate(-self.at[2] * math.pi/180)
         if self.lines or self.circs:
@@ -76,6 +80,10 @@ class Module:
         """
         Render a highlight at the footprint's position and of its size.
         """
+        #if package is on bottom do not render anything
+        if len(self.at)==4 and self.at[3] == True:
+            return
+
         cr.save()
         cr.translate(self.at[0], self.at[1])
         if len(self.at) == 3:
@@ -100,7 +108,7 @@ class Module:
     def _parse(self, mod, libs):
         mod_library = mod.attrib['library']
         mod_footprint = mod.attrib['package']
-        self.at = [float(mod.attrib['x']), float(mod.attrib['y'])]
+        self.at = [float(mod.attrib['x']), -float(mod.attrib['y'])]
         self.ref = mod.attrib['name']
         #TODO: add handling for mirroring and rotation in eagle
         mirrored = False
@@ -114,13 +122,17 @@ class Module:
                 angle = float(rot[1:])
         self.at.append(angle)
         self.at.append(mirrored)
-        self.bounds = [0, 0, 0, 0]
+        self.bounds = [None, None, None, None]
         for library in libs.iterfind("library"):
             if library.attrib['name'] == mod_library:
                 for footprint in library.iterfind("packages/package"):
                     if footprint.attrib['name'] == mod_footprint:
                         self._parse_graphic(footprint)
-
+        if self.bounds[0] == None:
+            self.bounds[0] = 0
+            self.bounds[1] = 0
+            self.bounds[2] = 0
+            self.bounds[3] = 0
 
 
 
@@ -128,15 +140,15 @@ class Module:
     def _parse_graphic(self, footprint):
         for wire in footprint.iterfind("wire"):
             if wire.attrib['layer'] in ('21', '51'):
-                start = (float(wire.attrib['x1']), float(wire.attrib['y1']))
-                end   = (float(wire.attrib['x2']), float(wire.attrib['y2']))
+                start = (float(wire.attrib['x1']), -float(wire.attrib['y1']))
+                end   = (float(wire.attrib['x2']), -float(wire.attrib['y2']))
                 self._update_bounds(start)
                 self._update_bounds(end)
                 self.lines.append((start, end))
         for rectangle in footprint.iterfind("rectangle"):
             if rectangle.attrib['layer'] in ('21', '51'):
-                start = (float(rectangle.attrib['x1']), float(rectangle.attrib['y1']))
-                end = (float(rectangle.attrib['x2']), float(rectangle.attrib['y2']))
+                start = (float(rectangle.attrib['x1']), -float(rectangle.attrib['y1']))
+                end = (float(rectangle.attrib['x2']), -float(rectangle.attrib['y2']))
                 self._update_bounds(start)
                 self._update_bounds(end)
                 self.lines.append((start, (end[0], start[1])))
@@ -145,12 +157,16 @@ class Module:
                 self.lines.append(((start[0], end[1]), start))
 
     def _update_bounds(self, at):
+        if self.bounds[0] == None:
+            self.bounds[0] = at[0]
+            self.bounds[1] = at[1]
+            self.bounds[2] = at[0]
+            self.bounds[3] = at[1]
         self.bounds[0] = min(self.bounds[0], at[0])
         self.bounds[1] = min(self.bounds[1], at[1])
         self.bounds[2] = max(self.bounds[2], at[0])
         self.bounds[3] = max(self.bounds[3], at[1])
 
-#TODO: PCB is mirrored (upside down), which is caused by cairo defining y from top to bottom while eagle has y defined from bottom to top
 class PCB:
     def __init__(self, board):
         self.modules = []
@@ -271,9 +287,7 @@ class PCB:
     def _parse(self, board):
         self.bounds = self._parse_edges(board)
 
-        #TODO: rewrite for eagle parsing, also think about that bounds should be updated if parts overlap the PCB outline
-        #for module in sexp.find_all(board, "module"):
-        #    self.modules.append(Module(module))
+        #TODO: bounds should be updated if parts overlap the PCB outline
         libraries = board.find("board/libraries")
         for module in board.iterfind("board/elements/element"):
             self.modules.append(Module(module,libraries))
@@ -291,8 +305,8 @@ class PCB:
             if "layer" in line.attrib and line.attrib['layer'] == "20":
                 x1 = float(line.attrib['x1'])
                 x2 = float(line.attrib['x2'])
-                y1 = float(line.attrib['y1'])
-                y2 = float(line.attrib['y2'])
+                y1 = -float(line.attrib['y1'])
+                y2 = -float(line.attrib['y2'])
                 if min_x == None:
                     min_x = x1
                     max_x = x1
