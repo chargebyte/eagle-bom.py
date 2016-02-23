@@ -131,7 +131,21 @@ class Module:
             self.bounds[3] = 0
 
 
-
+    def _rotate_point(self, point, pivot, angle):
+        s = math.sin(math.radians(angle))
+        c = math.cos(math.radians(angle))
+        #translate point back to origin:
+        point[0] -= pivot[0]
+        point[1] -= pivot[1]
+        #rotate point
+        new_point = [0,0]
+        new_point[0] = point[0] * c - point[1] * s;
+        new_point[1] = point[0] * s + point[1] * c;
+        point = new_point
+        #translate point back:
+        point[0] += pivot[0]
+        point[1] += pivot[1]
+        return point;
 
     def _parse_graphic(self, footprint):
         for wire in footprint.iterfind("wire"):
@@ -143,8 +157,17 @@ class Module:
                 self.lines.append((start, end))
         for rectangle in footprint.iterfind("rectangle"):
             if rectangle.attrib['layer'] in ('21', '51'):
-                start = (float(rectangle.attrib['x1']), -float(rectangle.attrib['y1']))
-                end = (float(rectangle.attrib['x2']), -float(rectangle.attrib['y2']))
+                start = [float(rectangle.attrib['x1']), -float(rectangle.attrib['y1'])]
+                end = [float(rectangle.attrib['x2']), -float(rectangle.attrib['y2'])]
+                if ("rot" in rectangle.attrib):
+
+                  print ("pre rot:  start=" + str(start) + " end=" + str(end))
+                  angle = float(rectangle.attrib['rot'][1:])
+                  center = [(start[0]+end[0])/2,(start[1]+end[1])/2]
+                  start = self._rotate_point(start, center, angle)
+                  end = self._rotate_point(end, center, angle)
+                  print ("post rot: start=" + str(start) + " end=" + str(end))
+                  print ("-")
                 self._update_bounds(start)
                 self._update_bounds(end)
                 self.lines.append((start, (end[0], start[1])))
@@ -310,7 +333,6 @@ class PCB:
         return angle
 
     def _add_curved_line(self, start,end,curve):
-        print(curve)
         x1 = start[0]
         y1 = start[1]
         x2 = end[0]
