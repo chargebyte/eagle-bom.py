@@ -69,10 +69,8 @@ class Module:
                 cr.line_to(*line[1])
                 cr.stroke()
             for circ in self.circs:
-                r = math.sqrt((circ[0][0] - circ[1][0])**2 +
-                              (circ[0][1] - circ[1][1])**2)
                 cr.new_sub_path()
-                cr.arc(circ[0][0], circ[0][1], r, 0, 2*math.pi)
+                cr.arc(circ[0][0], circ[0][1], circ[1], 0, 2*math.pi)
         cr.restore()
 
     def render_highlight(self, cr):
@@ -153,6 +151,13 @@ class Module:
                 self.lines.append(((end[0], start[1]), end))
                 self.lines.append((end, (start[0], end[1])))
                 self.lines.append(((start[0], end[1]), start))
+        for circle in footprint.iterfind("circle"):
+            if circle.attrib['layer'] in ('21', '51'):
+                center = (float(circle.attrib['x']), float(circle.attrib['y']))
+                radius = float(circle.attrib['radius'])
+                self._update_bounds((center[0]-radius, center[1]-radius))
+                self._update_bounds((center[0]+radius, center[1]+radius))
+                self.circs.append((center,radius))
 
     def _update_bounds(self, at):
         if self.bounds[0] == None:
