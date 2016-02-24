@@ -563,9 +563,9 @@ def write_sticker_list(elements, filename, pcb):
                              SPACING_X, SPACING_Y)
 
     bom = []
-    #TODO: remove DNP and EXCLUDE_FROM_BOM parts
     for line in elements_grouped:
-        bom.append(Line(line['NAME'], line['VALUE'], line['PACKAGE'], "", ""))
+        if not ("DO_NOT_PLACE" in line and line['DO_NOT_PLACE'] == "yes") and not ("EXCLUDEFROMBOM" in line and line['EXCLUDEFROMBOM'] == "yes"):
+            bom.append(Line(line['NAME'], line['VALUE'], line['PACKAGE'], "", ""))
 
     for line, label in zip(bom, labels):
         line.render(cr, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
