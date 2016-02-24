@@ -45,6 +45,8 @@ PAGE_HEIGHT = 210
 
 class Module:
     def __init__(self, mod, lib):
+        self.location = []
+        self.ref = ""
         self.lines = []
         self.circs = []
         self.bounds = []
@@ -55,14 +57,14 @@ class Module:
         Render the footprint in the board coordinate system.
         """
         #if package is on bottom do not render anything
-        if len(self.at)==4 and self.at[3] == True:
+        if len(self.location) == 4 and self.location[3] == True:
             return
 
         cr.save()
-        cr.translate(self.at[0], self.at[1])
+        cr.translate(self.location[0], self.location[1])
         cr.set_line_width(0.05)
-        if len(self.at) >= 3:
-            cr.rotate(-self.at[2] * math.pi/180)
+        if len(self.location) >= 3:
+            cr.rotate(-self.location[2] * math.pi/180)
         if self.lines or self.circs:
             for line in self.lines:
                 cr.move_to(*line[0])
@@ -78,26 +80,26 @@ class Module:
         Render a highlight at the footprint's position and of its size.
         """
         #if package is on bottom do not render anything
-        if len(self.at)==4 and self.at[3] == True:
+        if len(self.location) == 4 and self.location[3] == True:
             return
 
         cr.save()
-        cr.translate(self.at[0], self.at[1])
-        if len(self.at) >= 3:
-            cr.rotate(-self.at[2] * math.pi/180)
-        x1, y1, x2, y2 = self.bounds
-        a = 0.2
-        x1 -= a
-        y1 -= a
-        x2 += a
-        y2 += a
-        r = 0.5
+        cr.translate(self.location[0], self.location[1])
+        if len(self.location) >= 3:
+            cr.rotate(-self.location[2] * math.pi/180)
+        start_x, start_y, end_x, end_y = self.bounds
+        margin = 0.2
+        start_x -= margin
+        start_y -= margin
+        end_x += margin
+        end_y += margin
+        radius = 0.5
         pi2 = math.pi / 2.0
         cr.new_sub_path()
-        cr.arc(x1+r, y1+r, r, 2*pi2, 3*pi2)
-        cr.arc(x2-r, y1+r, r, 3*pi2, 4*pi2)
-        cr.arc(x2-r, y2-r, r, 0*pi2, 1*pi2)
-        cr.arc(x1+r, y2-r, r, 1*pi2, 2*pi2)
+        cr.arc(start_x+radius, start_y+radius, radius, 2*pi2, 3*pi2)
+        cr.arc(end_x-radius, start_y+radius, radius, 3*pi2, 4*pi2)
+        cr.arc(end_x-radius, end_y-radius, radius, 0*pi2, 1*pi2)
+        cr.arc(start_x+radius, end_y-radius, radius, 1*pi2, 2*pi2)
         cr.close_path()
         cr.fill()
         cr.restore()
@@ -105,7 +107,7 @@ class Module:
     def _parse(self, mod, libs):
         mod_library = mod.attrib['library']
         mod_footprint = mod.attrib['package']
-        self.at = [float(mod.attrib['x']), -float(mod.attrib['y'])]
+        self.location = [float(mod.attrib['x']), -float(mod.attrib['y'])]
         self.ref = mod.attrib['name']
         mirrored = False
         angle = 0
@@ -116,8 +118,8 @@ class Module:
                 angle = float(rot[2:])
             else:
                 angle = float(rot[1:])
-        self.at.append(angle)
-        self.at.append(mirrored)
+        self.location.append(angle)
+        self.location.append(mirrored)
         self.bounds = [None, None, None, None]
         for library in libs.iterfind("library"):
             if library.attrib['name'] == mod_library:
@@ -131,43 +133,43 @@ class Module:
             self.bounds[3] = 0
 
 
-    def _rotate_point(self, point, pivot, angle):
-        s = math.sin(math.radians(angle))
-        c = math.cos(math.radians(angle))
+    def _rotate_point(point, pivot, angle):
+        sin = math.sin(math.radians(angle))
+        cos = math.cos(math.radians(angle))
         #translate point back to origin:
         point[0] -= pivot[0]
         point[1] -= pivot[1]
         #rotate point
-        new_point = [0,0]
-        new_point[0] = point[0] * c - point[1] * s;
-        new_point[1] = point[0] * s + point[1] * c;
+        new_point = [0, 0]
+        new_point[0] = point[0] * cos - point[1] * sin
+        new_point[1] = point[0] * sin + point[1] * cos
         point = new_point
         #translate point back:
         point[0] += pivot[0]
         point[1] += pivot[1]
-        return point;
+        return point
 
     def _parse_graphic(self, footprint):
         for wire in footprint.iterfind("wire"):
             if wire.attrib['layer'] in ('21', '51'):
                 start = (float(wire.attrib['x1']), -float(wire.attrib['y1']))
-                end   = (float(wire.attrib['x2']), -float(wire.attrib['y2']))
+                end = (float(wire.attrib['x2']), -float(wire.attrib['y2']))
                 self._update_bounds(start)
                 self._update_bounds(end)
                 self.lines.append((start, end))
         for rectangle in footprint.iterfind("rectangle"):
             if rectangle.attrib['layer'] in ('21', '51'):
-                start = [float(rectangle.attrib['x1']), -float(rectangle.attrib['y1'])]
-                end = [float(rectangle.attrib['x2']), -float(rectangle.attrib['y2'])]
-                if ("rot" in rectangle.attrib):
-
-                  print ("pre rot:  start=" + str(start) + " end=" + str(end))
-                  angle = float(rectangle.attrib['rot'][1:])
-                  center = [(start[0]+end[0])/2,(start[1]+end[1])/2]
-                  start = self._rotate_point(start, center, angle)
-                  end = self._rotate_point(end, center, angle)
-                  print ("post rot: start=" + str(start) + " end=" + str(end))
-                  print ("-")
+                start_x = float(rectangle.attrib['x1'])
+                end_x = float(rectangle.attrib['x2'])
+                start_y = float(rectangle.attrib['y1'])
+                end_y = float(rectangle.attrib['y2'])
+                start = [start_x, -start_y]
+                end = [end_x, -end_y]
+                if "rot" in rectangle.attrib:
+                    angle = float(rectangle.attrib['rot'][1:])
+                    center = [(start[0]+end[0])/2, (start[1]+end[1])/2]
+                    start = self._rotate_point(start, center, angle)
+                    end = self._rotate_point(end, center, angle)
                 self._update_bounds(start)
                 self._update_bounds(end)
                 self.lines.append((start, (end[0], start[1])))
@@ -180,18 +182,18 @@ class Module:
                 radius = float(circle.attrib['radius'])
                 self._update_bounds((center[0]-radius, center[1]-radius))
                 self._update_bounds((center[0]+radius, center[1]+radius))
-                self.circs.append((center,radius))
+                self.circs.append((center, radius))
 
-    def _update_bounds(self, at):
+    def _update_bounds(self, location):
         if self.bounds[0] == None:
-            self.bounds[0] = at[0]
-            self.bounds[1] = at[1]
-            self.bounds[2] = at[0]
-            self.bounds[3] = at[1]
-        self.bounds[0] = min(self.bounds[0], at[0])
-        self.bounds[1] = min(self.bounds[1], at[1])
-        self.bounds[2] = max(self.bounds[2], at[0])
-        self.bounds[3] = max(self.bounds[3], at[1])
+            self.bounds[0] = location[0]
+            self.bounds[1] = location[1]
+            self.bounds[2] = location[0]
+            self.bounds[3] = location[1]
+        self.bounds[0] = min(self.bounds[0], location[0])
+        self.bounds[1] = min(self.bounds[1], location[1])
+        self.bounds[2] = max(self.bounds[2], location[0])
+        self.bounds[3] = max(self.bounds[3], location[1])
 
 class PCB:
     def __init__(self, board):
@@ -299,10 +301,10 @@ class PCB:
             if module.ref not in highlights:
                 continue
             a = max(module.bounds) * 2
-            hl_bounds[0] = min(hl_bounds[0], module.at[0] - a)
-            hl_bounds[1] = min(hl_bounds[1], module.at[1] - a)
-            hl_bounds[2] = max(hl_bounds[2], module.at[0] + a)
-            hl_bounds[3] = max(hl_bounds[3], module.at[1] + a)
+            hl_bounds[0] = min(hl_bounds[0], module.location[0] - a)
+            hl_bounds[1] = min(hl_bounds[1], module.location[1] - a)
+            hl_bounds[2] = max(hl_bounds[2], module.location[0] + a)
+            hl_bounds[3] = max(hl_bounds[3], module.location[1] + a)
         return hl_bounds
 
     def _parse(self, board):
@@ -311,45 +313,49 @@ class PCB:
         #TODO: bounds should be updated if parts overlap the PCB outline
         libraries = board.find("board/libraries")
         for module in board.iterfind("board/elements/element"):
-            self.modules.append(Module(module,libraries))
+            self.modules.append(Module(module, libraries))
 
         self.width = self.bounds[2] - self.bounds[0]
         self.height = self.bounds[3] - self.bounds[1]
 
-    def _get_angle(self, x1,y1,x2,y2):
-        x_diff = x2-x1
-        y_diff = y2-y1
+    def _get_angle(self, start, end):
+        start_x = start[0]
+        start_y = start[1]
+        end_x = end[0]
+        end_y = end[1]
+        x_diff = end_x-start_x
+        y_diff = end_y-start_y
 
         if x_diff != 0:
             angle = math.degrees(math.atan(y_diff / x_diff))
         else:
             angle = 90
 
-        if (x2 < x1):
+        if end_x < start_x:
             angle += 180
-        elif (x2==x1 and y2<y1):
+        elif end_x == start_x and end_y < start_y:
             angle += 180
 
         return angle
 
-    def _add_curved_line(self, start,end,curve):
-        x1 = start[0]
-        y1 = start[1]
-        x2 = end[0]
-        y2 = end[1]
+    def _add_curved_line(self, start, end, curve):
+        start_x = start[0]
+        start_y = start[1]
+        end_x = end[0]
+        end_y = end[1]
         #middle between start and end point
-        x_mid = (x1 + x2) / 2
-        y_mid = (y1 + y2) / 2
+        x_mid = (start_x + end_x) / 2
+        y_mid = (start_y + end_y) / 2
 
         #difference between the points to calculate the angle of the direct line
-        angle = self._get_angle(x1,y1,x2,y2)
+        angle = self._get_angle([start_x, start_y], [end_x, end_y])
 
 
         #add angle between mid and center points which is 90 degrees
         angle += 90
-          
+
         #distance from point 1 to the middle point
-        dist_1_mid = ((x1-x_mid)**2 + (y1-y_mid)**2)**0.5
+        dist_1_mid = ((start_x-x_mid)**2 + (start_y-y_mid)**2)**0.5
 
         #distance from the middle point to the center of the circle
         dist_mid_center = dist_1_mid / math.tan(math.radians(curve/2))
@@ -357,25 +363,24 @@ class PCB:
         x_center = x_mid + dist_mid_center * math.cos(math.radians(angle))
         y_center = y_mid + dist_mid_center * math.sin(math.radians(angle))
 
-        radius = ( (x_center - x1)**2 + (y_center - y1)**2)**0.5
+        radius = ((x_center - start_x)**2 + (y_center - start_y)**2)**0.5
 
         #get angle from center to start and end
-        angle_start = self._get_angle(x_center, y_center, x1, y1)
-        angle_end   = self._get_angle(x_center, y_center, x2, y2)
+        angle_start = self._get_angle([x_center, y_center], [start_x, start_y])
+        angle_end = self._get_angle([x_center, y_center], [end_x, end_y])
 
         if curve > 0:
             self.edge_arcs.append((x_center, y_center, radius,
-                                       math.radians(angle_start), math.radians(angle_end)))
+                           math.radians(angle_start), math.radians(angle_end)))
         else:
             self.edge_arcs.append((x_center, y_center, radius,
-                                       math.radians(angle_end), math.radians(angle_start)))
+                           math.radians(angle_end), math.radians(angle_start)))
 
     def _parse_edges(self, board):
-        min_x =  None
-        max_x =  None
-        min_y =  None
-        max_y =  None
-        
+        min_x = None
+        max_x = None
+        min_y = None
+        max_y = None
         for line in board.iterfind("board/plain/wire"):
             if "layer" in line.attrib and line.attrib['layer'] == "20":
                 x1 = float(line.attrib['x1'])
@@ -403,14 +408,14 @@ class PCB:
                 max_y = max(y2, max_y)
 
                 start = [x1, y1]
-                end   = [x2, y2]
+                end = [x2, y2]
 
                 if curve == 0:
-                    self.edge_lines.append((start,end))
+                    self.edge_lines.append((start, end))
                 else:
                     self._add_curved_line(start, end, curve)
 
-        return [min_x,min_y,max_x,max_y]
+        return [min_x, min_y, max_x, max_y]
 
 
 class Line:
@@ -564,8 +569,14 @@ def write_sticker_list(elements, filename, pcb):
 
     bom = []
     for line in elements_grouped:
-        if not ("DO_NOT_PLACE" in line and line['DO_NOT_PLACE'] == "yes") and not ("EXCLUDEFROMBOM" in line and line['EXCLUDEFROMBOM'] == "yes"):
-            bom.append(Line(line['NAME'], line['VALUE'], line['PACKAGE'], "", ""))
+        if not ("DO_NOT_PLACE" in line and line['DO_NOT_PLACE'] == "yes") and \
+           not ("EXCLUDEFROMBOM" in line and line['EXCLUDEFROMBOM'] == "yes"):
+            bom_line = Line(line['NAME'],
+                            line['VALUE'],
+                            line['PACKAGE'],
+                            "",
+                            "")
+            bom.append(bom_line)
 
     for line, label in zip(bom, labels):
         line.render(cr, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
