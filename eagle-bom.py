@@ -43,7 +43,7 @@ SPACING_Y = 2.0
 PAGE_WIDTH = 297
 PAGE_HEIGHT = 210
 
-class Module:
+class Module(object):
     def __init__(self, mod, lib):
         self.location = []
         self.ref = ""
@@ -195,7 +195,7 @@ class Module:
         self.bounds[2] = max(self.bounds[2], location[0])
         self.bounds[3] = max(self.bounds[3], location[1])
 
-class PCB:
+class PCB(object):
     def __init__(self, board):
         self.modules = []
         self.edge_lines = []
@@ -418,7 +418,7 @@ class PCB:
         return [min_x, min_y, max_x, max_y]
 
 
-class Line:
+class Line(object):
     def __init__(self, refs, value, footprint, supplier, code):
         self.refs = refs
         self.value = value
