@@ -44,7 +44,13 @@ PAGE_WIDTH = 297
 PAGE_HEIGHT = 210
 
 class Module(object):
+    """
+    representation of a single component assembled to a PCB
+    """
     def __init__(self, mod, lib):
+        """
+        initialize the object width some empty arrays that will be filled by also calling the _parse function
+        """
         self.location = []
         self.ref = ""
         self.lines = []
@@ -105,6 +111,9 @@ class Module(object):
         cr.restore()
 
     def _parse(self, mod, libs):
+        """
+        parse the given part into this class for a later rendering
+        """
         mod_library = mod.attrib['library']
         mod_footprint = mod.attrib['package']
         self.location = [float(mod.attrib['x']), -float(mod.attrib['y'])]
@@ -134,6 +143,9 @@ class Module(object):
 
 
     def _rotate_point(self, point, pivot, angle):
+        """
+        internal helper function for rotation of a point around a pivot point, the new (rotated) point will be returned
+        """
         sin = math.sin(math.radians(angle))
         cos = math.cos(math.radians(angle))
         #translate point back to origin:
@@ -150,6 +162,9 @@ class Module(object):
         return point
 
     def _parse_graphic(self, footprint):
+        """
+        parse the given library footprint into this class for later rendering
+        """
         for wire in footprint.iterfind("wire"):
             if wire.attrib['layer'] in ('21', '51'):
                 start = (float(wire.attrib['x1']), -float(wire.attrib['y1']))
@@ -185,6 +200,9 @@ class Module(object):
                 self.circs.append((center, radius))
 
     def _update_bounds(self, location):
+        """
+        updates the bounds of this class to include the passed location
+        """
         if self.bounds[0] == None:
             self.bounds[0] = location[0]
             self.bounds[1] = location[1]
@@ -196,7 +214,13 @@ class Module(object):
         self.bounds[3] = max(self.bounds[3], location[1])
 
 class PCB(object):
+    """
+    representation of a PCB
+    """
     def __init__(self, board):
+        """
+        initialization of the object, some empty lists will be created and filled by calling the _parse function
+        """
         self.modules = []
         self.edge_lines = []
         self.edge_arcs = []
@@ -290,6 +314,9 @@ class PCB(object):
         cr.restore()
 
     def _find_highlighted_bounds(self, highlights):
+        """
+        find the bounds for all highlighted components
+        """
         # Find bounds on highlighted modules
         # TODO: Deal with rotation in modules in a more elegant fashion
         # (Rotation includes bounds, so here we just take the biggest bound,
@@ -308,6 +335,9 @@ class PCB(object):
         return hl_bounds
 
     def _parse(self, board):
+        """
+        parse the given board into this object for later rendering
+        """
         self.bounds = self._parse_edges(board)
 
         #TODO: bounds should be updated if parts overlap the PCB outline
@@ -319,6 +349,9 @@ class PCB(object):
         self.height = self.bounds[3] - self.bounds[1]
 
     def _get_angle(self, start, end):
+        """
+        returns the angle between the x-axis and the thought line from start to end
+        """
         start_x = start[0]
         start_y = start[1]
         end_x = end[0]
@@ -339,6 +372,11 @@ class PCB(object):
         return angle
 
     def _add_curved_line(self, start, end, curve):
+        """
+        adds a curved line to the objects list of curved lines
+        to do so it transforms the given set of start/end/curve to
+        the set of center/radius/start angle/end angle
+        """
         start_x = start[0]
         start_y = start[1]
         end_x = end[0]
@@ -377,6 +415,9 @@ class PCB(object):
                            math.radians(angle_end), math.radians(angle_start)))
 
     def _parse_edges(self, board):
+        """
+        parses the board for all edges in the relevant layer 20
+        """
         min_x = None
         max_x = None
         min_y = None
@@ -419,7 +460,14 @@ class PCB(object):
 
 
 class Line(object):
+    """
+    representation of a BOM Line
+    """
     def __init__(self, refs, value, footprint, supplier, code):
+        """
+        initiates the object with the passed arguments
+        refs is a list, all other parameters are strings
+        """
         self.refs = refs
         self.value = value
         self.footprint = footprint
@@ -427,6 +475,9 @@ class Line(object):
         self.code = code
 
     def render(self, cr, where, w, h):
+        """
+        renders the object
+        """
         cr.save()
 
         # Clip to permissible area
