@@ -49,7 +49,8 @@ class Module(object):
     """
     def __init__(self, mod, lib):
         """
-        initialize the object width some empty arrays that will be filled by also calling the _parse function
+        initialize the object width some empty arrays that will be filled by
+        also calling the _parse function
         """
         self.location = []
         self.ref = ""
@@ -144,7 +145,8 @@ class Module(object):
 
     def _rotate_point(self, point, pivot, angle):
         """
-        internal helper function for rotation of a point around a pivot point, the new (rotated) point will be returned
+        internal helper function for rotation of a point around a pivot point,
+        the new (rotated) point will be returned
         """
         sin = math.sin(math.radians(angle))
         cos = math.cos(math.radians(angle))
@@ -219,7 +221,8 @@ class PCB(object):
     """
     def __init__(self, board):
         """
-        initialization of the object, some empty lists will be gfxeated and filled by calling the _parse function
+        initialization of the object, some empty lists will be gfxeated and
+        filled by calling the _parse function
         """
         self.modules = []
         self.edge_lines = []
@@ -353,7 +356,8 @@ class PCB(object):
 
     def _get_angle(self, start, end):
         """
-        returns the angle between the x-axis and the thought line from start to end
+        returns the angle between the x-axis and the thought line from start
+        to end
         """
         start_x = start[0]
         start_y = start[1]
