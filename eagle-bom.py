@@ -133,7 +133,7 @@ class Module:
             self.bounds[3] = 0
 
 
-    def _rotate_point(self.point, pivot, angle):
+    def _rotate_point(self, point, pivot, angle):
         sin = math.sin(math.radians(angle))
         cos = math.cos(math.radians(angle))
         #translate point back to origin:
