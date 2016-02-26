@@ -94,7 +94,7 @@ class Module(object):
         gfx.translate(self.location[0], self.location[1])
         if len(self.location) >= 3:
             gfx.rotate(-self.location[2] * math.pi/180)
-        start_x, start_y, end_x, end_y = self.bounds
+        start_x, start_y, end_x, end_y = self.bounds # pylint: disable=unbalanced-tuple-unpacking
         margin = 0.2
         start_x -= margin
         start_y -= margin
@@ -314,7 +314,7 @@ class PCB(object):
         # Render edge arcs
         for arc in self.edge_arcs:
             gfx.new_sub_path()
-            gfx.arc(*arc)
+            gfx.arc(*arc) # pylint: disable=star-args
             gfx.stroke()
 
         gfx.restore()
