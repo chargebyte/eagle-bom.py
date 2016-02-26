@@ -424,32 +424,32 @@ class PCB(object):
         max_y = None
         for line in board.iterfind("board/plain/wire"):
             if "layer" in line.attrib and line.attrib['layer'] == "20":
-                x1 = float(line.attrib['x1'])
-                x2 = float(line.attrib['x2'])
-                y1 = -float(line.attrib['y1'])
-                y2 = -float(line.attrib['y2'])
+                start_x = float(line.attrib['x1'])
+                end_x = float(line.attrib['x2'])
+                start_y = -float(line.attrib['y1'])
+                end_y = -float(line.attrib['y2'])
                 if "curve" in line.attrib:
                     curve = -float(line.attrib['curve'])
                 else:
                     curve = 0.0
                 if min_x == None:
-                    min_x = x1
-                    max_x = x1
-                    min_y = y1
-                    max_y = y1
+                    min_x = start_x
+                    max_x = start_x
+                    min_y = start_y
+                    max_y = start_y
 
-                min_x = min(x1, min_x)
-                min_x = min(x2, min_x)
-                max_x = max(x1, max_x)
-                max_x = max(x2, max_x)
+                min_x = min(start_x, min_x)
+                min_x = min(end_x, min_x)
+                max_x = max(start_x, max_x)
+                max_x = max(end_x, max_x)
 
-                min_y = min(y1, min_y)
-                min_y = min(y2, min_y)
-                max_y = max(y1, max_y)
-                max_y = max(y2, max_y)
+                min_y = min(start_y, min_y)
+                min_y = min(end_y, min_y)
+                max_y = max(start_y, max_y)
+                max_y = max(end_y, max_y)
 
-                start = [x1, y1]
-                end = [x2, y2]
+                start = [start_x, start_y]
+                end = [end_x, end_y]
 
                 if curve == 0:
                     self.edge_lines.append((start, end))
