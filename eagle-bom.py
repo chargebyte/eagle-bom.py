@@ -474,14 +474,14 @@ class Line(object):
         self.supplier = supplier
         self.code = code
 
-    def render(self, gfx, where, w, h):
+    def render(self, gfx, where, width, height):
         """
         renders the object
         """
         gfx.save()
 
         # Clip to permissible area
-        gfx.rectangle(where[0], where[1], w, h)
+        gfx.rectangle(where[0], where[1], width, height)
         gfx.clip()
 
         # Draw first line
