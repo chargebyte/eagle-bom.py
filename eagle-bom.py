@@ -599,11 +599,11 @@ def sheet_positions(gfx, label_width, label_height, labels_x, labels_y,
     calling gfx.show_page() when the current page is exhausted.
     """
     while True:
-        for x in range(labels_x):
-            for y in range(labels_y):
-                xx = margin_left + x*(label_width + spacing_x)
-                yy = margin_top + y*(label_height + spacing_y)
-                yield (xx, yy)
+        for x_position in range(labels_x):
+            for y_position in range(labels_y):
+                x_position = margin_left + x_position*(label_width + spacing_x)
+                y_position = margin_top + y_position*(label_height + spacing_y)
+                yield (x_position, y_position)
         gfx.show_page()
 
 def write_sticker_list(elements, filename, pcb):
