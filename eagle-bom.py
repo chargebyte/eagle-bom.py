@@ -142,8 +142,8 @@ class Module(object):
             self.bounds[2] = 0
             self.bounds[3] = 0
 
-
-    def _rotate_point(self, point, pivot, angle):
+    @staticmethod
+    def _rotate_point(point, pivot, angle):
         """
         internal helper function for rotation of a point around a pivot point,
         the new (rotated) point will be returned
@@ -185,8 +185,8 @@ class Module(object):
                 if "rot" in rectangle.attrib:
                     angle = float(rectangle.attrib['rot'][1:])
                     center = [(start[0]+end[0])/2, (start[1]+end[1])/2]
-                    start = self._rotate_point(start, center, angle)
-                    end = self._rotate_point(end, center, angle)
+                    start = Module._rotate_point(start, center, angle)
+                    end = Module._rotate_point(end, center, angle)
                 self._update_bounds(start)
                 self._update_bounds(end)
                 self.lines.append((start, (end[0], start[1])))
@@ -354,7 +354,8 @@ class PCB(object):
         self.width = self.bounds[2] - self.bounds[0]
         self.height = self.bounds[3] - self.bounds[1]
 
-    def _get_angle(self, start, end):
+    @staticmethod
+    def _get_angle(start, end):
         """
         returns the angle between the x-axis and the thought line from start
         to end
@@ -393,7 +394,7 @@ class PCB(object):
         y_mid = (start_y + end_y) / 2
 
         #difference between the points to calculate the angle of the direct line
-        angle = self._get_angle([start_x, start_y], [end_x, end_y])
+        angle = PCB._get_angle([start_x, start_y], [end_x, end_y])
 
 
         #add angle between mid and center points which is 90 degrees
@@ -411,8 +412,8 @@ class PCB(object):
         radius = ((x_center - start_x)**2 + (y_center - start_y)**2)**0.5
 
         #get angle from center to start and end
-        angle_start = self._get_angle([x_center, y_center], [start_x, start_y])
-        angle_end = self._get_angle([x_center, y_center], [end_x, end_y])
+        angle_start = PCB._get_angle([x_center, y_center], [start_x, start_y])
+        angle_end = PCB._get_angle([x_center, y_center], [end_x, end_y])
 
         if curve > 0:
             self.edge_arcs.append((x_center, y_center, radius,
