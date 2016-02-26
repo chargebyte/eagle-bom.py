@@ -58,7 +58,7 @@ class Module(object):
         self.bounds = []
         self._parse(mod, lib)
 
-    def render(self, cr):
+    def render(self, gfx):
         """"
         Render the footprint in the board coordinate system.
         """
@@ -66,22 +66,22 @@ class Module(object):
         if len(self.location) == 4 and self.location[3] == True:
             return
 
-        cr.save()
-        cr.translate(self.location[0], self.location[1])
-        cr.set_line_width(0.05)
+        gfx.save()
+        gfx.translate(self.location[0], self.location[1])
+        gfx.set_line_width(0.05)
         if len(self.location) >= 3:
-            cr.rotate(-self.location[2] * math.pi/180)
+            gfx.rotate(-self.location[2] * math.pi/180)
         if self.lines or self.circs:
             for line in self.lines:
-                cr.move_to(*line[0])
-                cr.line_to(*line[1])
-                cr.stroke()
+                gfx.move_to(*line[0])
+                gfx.line_to(*line[1])
+                gfx.stroke()
             for circ in self.circs:
-                cr.new_sub_path()
-                cr.arc(circ[0][0], circ[0][1], circ[1], 0, 2*math.pi)
-        cr.restore()
+                gfx.new_sub_path()
+                gfx.arc(circ[0][0], circ[0][1], circ[1], 0, 2*math.pi)
+        gfx.restore()
 
-    def render_highlight(self, cr):
+    def render_highlight(self, gfx):
         """
         Render a highlight at the footprint's position and of its size.
         """
@@ -89,10 +89,10 @@ class Module(object):
         if len(self.location) == 4 and self.location[3] == True:
             return
 
-        cr.save()
-        cr.translate(self.location[0], self.location[1])
+        gfx.save()
+        gfx.translate(self.location[0], self.location[1])
         if len(self.location) >= 3:
-            cr.rotate(-self.location[2] * math.pi/180)
+            gfx.rotate(-self.location[2] * math.pi/180)
         start_x, start_y, end_x, end_y = self.bounds
         margin = 0.2
         start_x -= margin
@@ -101,14 +101,14 @@ class Module(object):
         end_y += margin
         radius = 0.5
         pi2 = math.pi / 2.0
-        cr.new_sub_path()
-        cr.arc(start_x+radius, start_y+radius, radius, 2*pi2, 3*pi2)
-        cr.arc(end_x-radius, start_y+radius, radius, 3*pi2, 4*pi2)
-        cr.arc(end_x-radius, end_y-radius, radius, 0*pi2, 1*pi2)
-        cr.arc(start_x+radius, end_y-radius, radius, 1*pi2, 2*pi2)
-        cr.close_path()
-        cr.fill()
-        cr.restore()
+        gfx.new_sub_path()
+        gfx.arc(start_x+radius, start_y+radius, radius, 2*pi2, 3*pi2)
+        gfx.arc(end_x-radius, start_y+radius, radius, 3*pi2, 4*pi2)
+        gfx.arc(end_x-radius, end_y-radius, radius, 0*pi2, 1*pi2)
+        gfx.arc(start_x+radius, end_y-radius, radius, 1*pi2, 2*pi2)
+        gfx.close_path()
+        gfx.fill()
+        gfx.restore()
 
     def _parse(self, mod, libs):
         """
@@ -219,25 +219,25 @@ class PCB(object):
     """
     def __init__(self, board):
         """
-        initialization of the object, some empty lists will be created and filled by calling the _parse function
+        initialization of the object, some empty lists will be gfxeated and filled by calling the _parse function
         """
         self.modules = []
         self.edge_lines = []
         self.edge_arcs = []
         self._parse(board)
 
-    def render(self, cr, where, max_w, max_h, highlights=None):
+    def render(self, gfx, where, max_w, max_h, highlights=None):
         """
         Render the PCB, with the top left corner at `where`,
         occupying at most `max_w` width and `max_h` height,
         and draw a highlight under parts whose reference is in `highlights`.
         """
-        cr.save()
-        cr.set_line_width(0.1)
+        gfx.save()
+        gfx.set_line_width(0.1)
 
         # Set a clip to ensure we occupy at most max_w and max_h
-        cr.rectangle(where[0], where[1], max_w, max_h)
-        cr.clip()
+        gfx.rectangle(where[0], where[1], max_w, max_h)
+        gfx.clip()
 
         # Find bounds on highlighted modules
         hl_bounds = self._find_highlighted_bounds(highlights)
@@ -251,7 +251,7 @@ class PCB(object):
             scale_x = max_w / bound_width
             scale_y = max_h / bound_height
             scale = min(scale_x, scale_y, 3)
-            cr.scale(scale, scale)
+            gfx.scale(scale, scale)
         else:
             scale = 1
 
@@ -283,35 +283,35 @@ class PCB(object):
         else:
             shift_x = (max_w/(2*scale))-bound_centre_x
 
-        cr.translate(shift_x, shift_y)
+        gfx.translate(shift_x, shift_y)
 
         # Translate our origin to desired position on page
-        cr.translate(where[0]/scale, where[1]/scale)
+        gfx.translate(where[0]/scale, where[1]/scale)
 
         # Render highlights below everything else
-        cr.set_source_rgb(1.0, 0.5, 0.5)
+        gfx.set_source_rgb(1.0, 0.5, 0.5)
         for module in self.modules:
             if module.ref in highlights:
-                module.render_highlight(cr)
+                module.render_highlight(gfx)
 
         # Render modules
-        cr.set_source_rgb(0, 0, 0)
+        gfx.set_source_rgb(0, 0, 0)
         for module in self.modules:
-            module.render(cr)
+            module.render(gfx)
 
         # Render edge lines
         for line in self.edge_lines:
-            cr.move_to(*line[0])
-            cr.line_to(*line[1])
-            cr.stroke()
+            gfx.move_to(*line[0])
+            gfx.line_to(*line[1])
+            gfx.stroke()
 
         # Render edge arcs
         for arc in self.edge_arcs:
-            cr.new_sub_path()
-            cr.arc(*arc)
-            cr.stroke()
+            gfx.new_sub_path()
+            gfx.arc(*arc)
+            gfx.stroke()
 
-        cr.restore()
+        gfx.restore()
 
     def _find_highlighted_bounds(self, highlights):
         """
@@ -474,40 +474,40 @@ class Line(object):
         self.supplier = supplier
         self.code = code
 
-    def render(self, cr, where, w, h):
+    def render(self, gfx, where, w, h):
         """
         renders the object
         """
-        cr.save()
+        gfx.save()
 
         # Clip to permissible area
-        cr.rectangle(where[0], where[1], w, h)
-        cr.clip()
+        gfx.rectangle(where[0], where[1], w, h)
+        gfx.clip()
 
         # Draw first line
-        cr.set_source_rgb(0, 0, 0)
-        cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
+        gfx.set_source_rgb(0, 0, 0)
+        gfx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
                             cairo.FONT_WEIGHT_BOLD)
-        cr.set_font_size(3.0)
-        cr.move_to(where[0]+3, where[1]+5)
-        cr.show_text(" ".join(self.refs))
+        gfx.set_font_size(3.0)
+        gfx.move_to(where[0]+3, where[1]+5)
+        gfx.show_text(" ".join(self.refs))
 
         # Draw second line
-        cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
+        gfx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
                             cairo.FONT_WEIGHT_NORMAL)
-        cr.set_font_size(3.0)
-        cr.move_to(where[0]+3, where[1]+9)
-        cr.show_text("{}x  {}  {}"
+        gfx.set_font_size(3.0)
+        gfx.move_to(where[0]+3, where[1]+9)
+        gfx.show_text("{}x  {}  {}"
                      .format(len(self.refs), self.value, self.footprint))
 
         # Draw third line
-        cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
+        gfx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
                             cairo.FONT_WEIGHT_NORMAL)
-        cr.set_font_size(3.0)
-        cr.move_to(where[0]+3, where[1]+12)
-        cr.show_text("{} {}".format(self.supplier, self.code))
+        gfx.set_font_size(3.0)
+        gfx.move_to(where[0]+3, where[1]+12)
+        gfx.show_text("{} {}".format(self.supplier, self.code))
 
-        cr.restore()
+        gfx.restore()
 
 
 def sort_colums_for_csv(column_name):
@@ -590,10 +590,10 @@ def get_value_list(elements):
         grouped_elements.append(grouped_element)
     return grouped_elements
 
-def sheet_positions(cr, label_width, label_height, labels_x, labels_y,
+def sheet_positions(gfx, label_width, label_height, labels_x, labels_y,
                     margin_top, margin_left, spacing_x, spacing_y):
     """Forever yields a new (x, y) of successive label top-left positions,
-    calling cr.show_page() when the current page is exhausted.
+    calling gfx.show_page() when the current page is exhausted.
     """
     while True:
         for x in range(labels_x):
@@ -601,7 +601,7 @@ def sheet_positions(cr, label_width, label_height, labels_x, labels_y,
                 xx = margin_left + x*(label_width + spacing_x)
                 yy = margin_top + y*(label_height + spacing_y)
                 yield (xx, yy)
-        cr.show_page()
+        gfx.show_page()
 
 def write_sticker_list(elements, filename, pcb):
     """output bom as stickers for each type of component in pdf format"""
@@ -609,12 +609,12 @@ def write_sticker_list(elements, filename, pcb):
 
     mm_to_pt = 2.835
     ps = cairo.PDFSurface(filename, PAGE_WIDTH*mm_to_pt, PAGE_HEIGHT*mm_to_pt)
-    cr = cairo.Context(ps)
+    gfx = cairo.Context(ps)
 
     # Scale user units to millimetres
-    cr.scale(1/0.3528, 1/0.3528)
+    gfx.scale(1/0.3528, 1/0.3528)
 
-    labels = sheet_positions(cr, LABEL_WIDTH, LABEL_HEIGHT,
+    labels = sheet_positions(gfx, LABEL_WIDTH, LABEL_HEIGHT,
                              LABELS_X, LABELS_Y, MARGIN_TOP, MARGIN_LEFT,
                              SPACING_X, SPACING_Y)
 
@@ -630,10 +630,10 @@ def write_sticker_list(elements, filename, pcb):
             bom.append(bom_line)
 
     for line, label in zip(bom, labels):
-        line.render(cr, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
-        pcb.render(cr, (label[0]+1, label[1]+14), LABEL_WIDTH-2,
+        line.render(gfx, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
+        pcb.render(gfx, (label[0]+1, label[1]+14), LABEL_WIDTH-2,
                    LABEL_HEIGHT-14, line.refs)
-    cr.show_page()
+    gfx.show_page()
 
 def write_value_list(elements, filename, set_delimiter):
     """group equal elements together and write to 'filename' as csv file
