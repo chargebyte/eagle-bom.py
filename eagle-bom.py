@@ -623,8 +623,7 @@ def write_sticker_list(elements, filename, pcb):
 
     bom = []
     for line in elements_grouped:
-        if not ("DO_NOT_PLACE" in line and line['DO_NOT_PLACE'] == "yes") and \
-           not ("EXCLUDEFROMBOM" in line and line['EXCLUDEFROMBOM'] == "yes"):
+        if not ("DO_NOT_PLACE" in line and line['DO_NOT_PLACE'] == "yes"):
             bom_line = Line(line['NAME'],
                             line['VALUE'],
                             line['PACKAGE'],
