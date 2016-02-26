@@ -224,6 +224,9 @@ class PCB(object):
         self.modules = []
         self.edge_lines = []
         self.edge_arcs = []
+        self.bounds = []
+        self.height = 0
+        self.width = 0
         self._parse(board)
 
     def render(self, gfx, where, max_w, max_h, highlights=None):
