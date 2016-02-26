@@ -249,14 +249,12 @@ class PCB(object):
         hl_bounds = self._find_highlighted_bounds(highlights)
         bound_width = hl_bounds[2] - hl_bounds[0]
         bound_height = hl_bounds[3] - hl_bounds[1]
-        bound_centre_x = hl_bounds[0] + bound_width/2
-        bound_centre_y = hl_bounds[1] + bound_height/2
+        bound_centre = [hl_bounds[0] + bound_width/2,
+                        hl_bounds[1] + bound_height/2]
 
         # Scale to fit bounds
         if bound_width > 0 and bound_height > 0:
-            scale_x = max_w / bound_width
-            scale_y = max_h / bound_height
-            scale = min(scale_x, scale_y, 3)
+            scale = min(max_w / bound_width, max_h / bound_height, 3)
             gfx.scale(scale, scale)
         else:
             scale = 1
@@ -273,7 +271,7 @@ class PCB(object):
 
         # Otherwise centre the highlighted region vertically
         else:
-            shift_y = (max_h/(2*scale))-bound_centre_y
+            shift_y = (max_h/(2*scale))-bound_centre[1]
 
         # Can we shift the left edge of the PCB to the left and not cut off
         # the right of the highlight?
@@ -287,7 +285,7 @@ class PCB(object):
 
         # Otherwise centre the highlighted region horizontally
         else:
-            shift_x = (max_w/(2*scale))-bound_centre_x
+            shift_x = (max_w/(2*scale))-bound_centre[0]
 
         gfx.translate(shift_x, shift_y)
 
@@ -300,11 +298,20 @@ class PCB(object):
             if module.ref in highlights:
                 module.render_highlight(gfx)
 
-        # Render modules
         gfx.set_source_rgb(0, 0, 0)
+
+        # Render modules
         for module in self.modules:
             module.render(gfx)
 
+        self._render_pcb_border(gfx)
+
+        gfx.restore()
+
+    def _render_pcb_border(self, gfx):
+        """
+        renders the outline of the PCB
+        """
         # Render edge lines
         for line in self.edge_lines:
             gfx.move_to(*line[0])
@@ -316,8 +323,6 @@ class PCB(object):
             gfx.new_sub_path()
             gfx.arc(*arc) # pylint: disable=star-args
             gfx.stroke()
-
-        gfx.restore()
 
     def _find_highlighted_bounds(self, highlights):
         """
@@ -385,41 +390,35 @@ class PCB(object):
         to do so it transforms the given set of start/end/curve to
         the set of center/radius/start angle/end angle
         """
-        start_x = start[0]
-        start_y = start[1]
-        end_x = end[0]
-        end_y = end[1]
+
         #middle between start and end point
-        x_mid = (start_x + end_x) / 2
-        y_mid = (start_y + end_y) / 2
+        x_mid = (start[0] + end[0]) / 2
+        y_mid = (start[1] + end[1]) / 2
 
         #difference between the points to calculate the angle of the direct line
-        angle = PCB._get_angle([start_x, start_y], [end_x, end_y])
-
+        angle = PCB._get_angle([start[0], start[1]], [end[0], end[1]])
 
         #add angle between mid and center points which is 90 degrees
         angle += 90
 
         #distance from point 1 to the middle point
-        dist_1_mid = ((start_x-x_mid)**2 + (start_y-y_mid)**2)**0.5
+        dist_1_mid = ((start[0]-x_mid)**2 + (start[1]-y_mid)**2)**0.5
 
         #distance from the middle point to the center of the circle
         dist_mid_center = dist_1_mid / math.tan(math.radians(curve/2))
-
-        x_center = x_mid + dist_mid_center * math.cos(math.radians(angle))
-        y_center = y_mid + dist_mid_center * math.sin(math.radians(angle))
-
-        radius = ((x_center - start_x)**2 + (y_center - start_y)**2)**0.5
-
+        #finally calculate center of the circle
+        center = [x_mid + dist_mid_center * math.cos(math.radians(angle)),
+                  y_mid + dist_mid_center * math.sin(math.radians(angle))]
+        #calculate the radius of the circle
+        radius = ((center[0] - start[0])**2 + (center[1] - start[1])**2)**0.5
         #get angle from center to start and end
-        angle_start = PCB._get_angle([x_center, y_center], [start_x, start_y])
-        angle_end = PCB._get_angle([x_center, y_center], [end_x, end_y])
-
+        angle_start = PCB._get_angle(center, start)
+        angle_end = PCB._get_angle(center, end)
         if curve > 0:
-            self.edge_arcs.append((x_center, y_center, radius,
+            self.edge_arcs.append((center[0], center[1], radius,
                            math.radians(angle_start), math.radians(angle_end)))
         else:
-            self.edge_arcs.append((x_center, y_center, radius,
+            self.edge_arcs.append((center[0], center[1], radius,
                            math.radians(angle_end), math.radians(angle_start)))
 
     def _parse_edges(self, board):
@@ -810,27 +809,35 @@ def write_bom(elements, settings, pcb):
     elif settings['bom_type'] == 'sticker':
         write_sticker_list(elements, settings['out_filename'], pcb)
 
+def get_eagle_root(settings):
+    """
+    returns the root element of the supplied eagle xml file
+    """
+    return ET.ElementTree(file=settings['in_filename_brd']).getroot()
+
+
 def bom_creation(settings):
     """this function reads the eagle XML and processes it to produce the
     bill of material
     """
-    #prepare differences for brd and sch files
-    if 'in_filename_brd' in settings:
-        root = ET.ElementTree(file=settings['in_filename_brd']).getroot()
-        variant_find_string = "board/variantdefs/variantdef"
-        part_find_string = "board/elements/element"
-        pcb = PCB(root[0])
-    elif 'in_filename_sch' in settings:
-        root = ET.ElementTree(file=settings['in_filename_sch']).getroot()
-        variant_find_string = "schematic/variantdefs/variantdef"
-        part_find_string = "schematic/parts/part"
-
     #if eagleversion was set, just output the used version of eagle and exit
     if 'eagleversion' in settings:
-        return output_eagle_version(root)
+        return output_eagle_version(get_eagle_root(settings))
+
+    #prepare differences for brd and sch files
+    if 'in_filename_brd' in settings:
+        variant_find_string = "board/variantdefs/variantdef"
+        part_find_string = "board/elements/element"
+        pcb = PCB(get_eagle_root(settings))
+    elif 'in_filename_sch' in settings:
+        variant_find_string = "schematic/variantdefs/variantdef"
+        part_find_string = "schematic/parts/part"
+        pcb = "" #TODO: deal with the missing PCB data in a more elegant fashion
 
 
-    drawing = root[0]
+
+
+    drawing = get_eagle_root(settings)[0]
     elements = []
 
 
