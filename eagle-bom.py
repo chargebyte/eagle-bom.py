@@ -327,11 +327,11 @@ class PCB(object):
         for module in self.modules:
             if module.ref not in highlights:
                 continue
-            a = max(module.bounds) * 2
-            hl_bounds[0] = min(hl_bounds[0], module.location[0] - a)
-            hl_bounds[1] = min(hl_bounds[1], module.location[1] - a)
-            hl_bounds[2] = max(hl_bounds[2], module.location[0] + a)
-            hl_bounds[3] = max(hl_bounds[3], module.location[1] + a)
+            margin = max(module.bounds) * 2
+            hl_bounds[0] = min(hl_bounds[0], module.location[0] - margin)
+            hl_bounds[1] = min(hl_bounds[1], module.location[1] - margin)
+            hl_bounds[2] = max(hl_bounds[2], module.location[0] + margin)
+            hl_bounds[3] = max(hl_bounds[3], module.location[1] + margin)
         return hl_bounds
 
     def _parse(self, board):
