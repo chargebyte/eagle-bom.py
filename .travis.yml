@@ -12,6 +12,8 @@ addons:
   apt:
     packages:
     - pylint
+    - python-cairo
+    - python3-cairo
 
 script:
 - pylint --rcfile=.pylint.config eagle-bom.py
