@@ -7,7 +7,7 @@ python:
 
 install:
 - pip install nose
-- pip install pycairo
+- pip install cairocffi
 
 addons:
   apt:

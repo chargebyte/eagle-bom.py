@@ -17,7 +17,7 @@ import sys
 from itertools import groupby
 import getopt
 import re
-import cairo
+import cairocffi as cairo
 import math
 
 COLUMNFIXEDORDER = {
