@@ -813,7 +813,10 @@ def get_eagle_root(settings):
     """
     returns the root element of the supplied eagle xml file
     """
-    return ET.ElementTree(file=settings['in_filename_brd']).getroot()
+    if 'in_filename_brd' in settings:
+      return ET.ElementTree(file=settings['in_filename_brd']).getroot()
+    elif 'in_filename_sch' in settings:
+      return ET.ElementTree(file=settings['in_filename_sch']).getroot()
 
 
 def bom_creation(settings):
