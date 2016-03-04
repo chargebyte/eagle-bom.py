@@ -834,7 +834,7 @@ def bom_creation(settings):
     if 'in_filename_brd' in settings:
         variant_find_string = "board/variantdefs/variantdef"
         part_find_string = "board/elements/element"
-        pcb = PCB(get_eagle_root(settings))
+        pcb = PCB(get_eagle_root(settings)[0])
     elif 'in_filename_sch' in settings:
         variant_find_string = "schematic/variantdefs/variantdef"
         part_find_string = "schematic/parts/part"
