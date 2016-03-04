@@ -5,8 +5,6 @@ files to build a bill-of material
 #for compatibility between python2 and python3 in conjunction with pylint
 from __future__ import print_function
 
-__version__ = "0.2.0"
-
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -20,13 +18,16 @@ import re
 import cairocffi as cairo
 import math
 
+
+__version__ = "0.2.0"
+
 COLUMNFIXEDORDER = {
-        'NAME':0,
-        'COUNT':1,
-        'VALUE':2,
-        'PACKAGE':3,
-        'DO_NOT_PLACE':4,
-        'PROVIDED_BY':5
+    'NAME':0,
+    'COUNT':1,
+    'VALUE':2,
+    'PACKAGE':3,
+    'DO_NOT_PLACE':4,
+    'PROVIDED_BY':5
 }
 
 VALID_BOM_TYPES = ("value", "part", "sticker")
@@ -64,7 +65,7 @@ class Module(object):
         Render the footprint in the board coordinate system.
         """
         #if package is on bottom do not render anything
-        if len(self.location) == 4 and self.location[3] == True:
+        if len(self.location) == 4 and self.location[3] is True:
             return
 
         gfx.save()
@@ -87,7 +88,7 @@ class Module(object):
         Render a highlight at the footprint's position and of its size.
         """
         #if package is on bottom do not render anything
-        if len(self.location) == 4 and self.location[3] == True:
+        if len(self.location) == 4 and self.location[3] is True:
             return
 
         gfx.save()
@@ -136,7 +137,7 @@ class Module(object):
                 for footprint in library.iterfind("packages/package"):
                     if footprint.attrib['name'] == mod_footprint:
                         self._parse_graphic(footprint)
-        if self.bounds[0] == None:
+        if self.bounds[0] is None:
             self.bounds[0] = 0
             self.bounds[1] = 0
             self.bounds[2] = 0
@@ -205,7 +206,7 @@ class Module(object):
         """
         updates the bounds of this class to include the passed location
         """
-        if self.bounds[0] == None:
+        if self.bounds[0] is None:
             self.bounds[0] = location[0]
             self.bounds[1] = location[1]
             self.bounds[2] = location[0]
@@ -416,10 +417,12 @@ class PCB(object):
         angle_end = PCB._get_angle(center, end)
         if curve > 0:
             self.edge_arcs.append((center[0], center[1], radius,
-                           math.radians(angle_start), math.radians(angle_end)))
+                                   math.radians(angle_start), 
+                                   math.radians(angle_end)))
         else:
             self.edge_arcs.append((center[0], center[1], radius,
-                           math.radians(angle_end), math.radians(angle_start)))
+                                   math.radians(angle_end), 
+                                   math.radians(angle_start)))
 
     def _parse_edges(self, board):
         """
@@ -439,7 +442,7 @@ class PCB(object):
                     curve = -float(line.attrib['curve'])
                 else:
                     curve = 0.0
-                if min_x == None:
+                if min_x is None:
                     min_x = start_x
                     max_x = start_x
                     min_y = start_y
@@ -494,22 +497,22 @@ class Line(object):
         # Draw first line
         gfx.set_source_rgb(0, 0, 0)
         gfx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
-                            cairo.FONT_WEIGHT_BOLD)
+                             cairo.FONT_WEIGHT_BOLD)
         gfx.set_font_size(3.0)
         gfx.move_to(where[0]+3, where[1]+5)
         gfx.show_text(" ".join(self.refs))
 
         # Draw second line
         gfx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
-                            cairo.FONT_WEIGHT_NORMAL)
+                             cairo.FONT_WEIGHT_NORMAL)
         gfx.set_font_size(3.0)
         gfx.move_to(where[0]+3, where[1]+9)
         gfx.show_text("{}x  {}  {}"
-                     .format(len(self.refs), self.value, self.footprint))
+                      .format(len(self.refs), self.value, self.footprint))
 
         # Draw third line
         gfx.select_font_face("Sans", cairo.FONT_SLANT_NORMAL,
-                            cairo.FONT_WEIGHT_NORMAL)
+                             cairo.FONT_WEIGHT_NORMAL)
         gfx.set_font_size(3.0)
         gfx.move_to(where[0]+3, where[1]+12)
         gfx.show_text("{} {}".format(self.supplier, self.code))
@@ -663,7 +666,7 @@ def write_part_list(elements, filename, set_delimiter):
     #field 'NAME' can be a list or a string, we always need a string here...
     #joining lists together by using commas
     for element in elements:
-        if type(element['NAME']) == list:
+        if isinstance(element['NAME'], list):
             element['NAME'] = ",".join(element['NAME'])
 
     fix_position_keys.sort(key=sort_colums_for_csv)
@@ -672,7 +675,7 @@ def write_part_list(elements, filename, set_delimiter):
     elements.sort(key=sort_rows_for_csv)
     file_pointer = open(filename, 'w')
     dict_writer = csv.DictWriter(file_pointer, all_keys_sorted,
-                      delimiter=set_delimiter, lineterminator='\n')
+                                 delimiter=set_delimiter, lineterminator='\n')
 
     #write header
     dict_writer.writer.writerow(all_keys_sorted)
@@ -683,7 +686,7 @@ def write_part_list(elements, filename, set_delimiter):
             #python2 try catch is used to avoid crash in python3 because
             #"unicode" is not defined
             try:
-                row[key] = val.encode('utf-8') if type(val) is unicode else val
+                row[key] = val.encode('utf-8') if isinstance(val, unicode) else val
             except NameError:
                 continue
         dict_writer.writerow(row)
@@ -754,7 +757,7 @@ def change_part_by_variant(part_tree, part, selected_variant):
 def get_first_line_text_from_html(html_string):
     """reduce html to the first line of text and strip all html tags
     """
-    if html_string == None:
+    if html_string is None:
         return None
     p_div = re.compile(r"</?(p|div|br).*?>",
                        re.IGNORECASE | re.DOTALL)
@@ -783,8 +786,8 @@ def select_variant(drawing, variant_find_string, settings):
             selected_variant = settings['set_variant']
     #find out which variant to use, if there is any
     if (selected_variant == "" and
-        default_variant == "" and
-        number_variant > 0):
+            default_variant == "" and
+            number_variant > 0):
         print ("invalid variant defined, aborting")
         return
     elif selected_variant == "":
@@ -868,14 +871,13 @@ def bom_creation(settings):
         # the BRD file does not contain this information
         if 'in_filename_sch' in settings:
             element['DESCRIPTION'] = get_first_line_text_from_html(
-                                        get_description(drawing,
-                                            elem.attrib['library'],
-                                            elem.attrib['deviceset']))
+                get_description(drawing,elem.attrib['library'],
+                                elem.attrib['deviceset']))
             element['DEVICE'] = elem.attrib["device"]
             element['PACKAGE'] = get_package(drawing,
-                                    elem.attrib['library'],
-                                    elem.attrib['deviceset'],
-                                    elem.attrib['device'])
+                                             elem.attrib['library'],
+                                             elem.attrib['deviceset'],
+                                             elem.attrib['device'])
         #get all attributes of the element
         for attribute in elem.iterfind('attribute'):
             if 'value' in attribute.attrib:
@@ -883,11 +885,12 @@ def bom_creation(settings):
                 attribute_value = attribute.attrib['value']
                 element[attribute_name] = attribute_value
         change_part_by_variant(elem, element, selected_variant)
-        if ('EXCLUDEFROMBOM' not in element and (('in_filename_sch' in settings
-          and is_part_on_pcb(drawing, elem.attrib['library'],
-          elem.attrib['deviceset'])) or 'in_filename_brd' in settings)
-          and (settings['notestpads'] == False
-          or 'TP_SIGNAL_NAME' not in element)):
+        if ('EXCLUDEFROMBOM' not in element and 
+            (('in_filename_sch' in settings and 
+              is_part_on_pcb(drawing, elem.attrib['library'],
+              elem.attrib['deviceset'])) or 'in_filename_brd' in settings)
+             and (settings['notestpads'] is False
+             or 'TP_SIGNAL_NAME' not in element)):
             elements.append(element)
     write_bom(elements, settings, pcb)
 
@@ -955,15 +958,15 @@ def parse_command_line_arguments(argv):
 
     try:
         opts = getopt.getopt(argv,
-                                   "hc:b:t:s:v:",
-                                   ["help", "csv=",
-                                    "brd=", "sch=",
-                                    "type=",
-                                    "separator=",
-                                    "variant=",
-                                    "notestpads",
-                                    "eagleversion",
-                                    "version"])[0]
+                             "hc:b:t:s:v:",
+                             ["help", "csv=",
+                              "brd=", "sch=",
+                              "type=",
+                              "separator=",
+                              "variant=",
+                              "notestpads",
+                              "eagleversion",
+                              "version"])[0]
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -1005,8 +1008,8 @@ def main(argv):
     settings = parse_command_line_arguments(argv)
 
     #check sanity of settings
-    if ('in_filename_brd' not in settings
-        and 'in_filename_sch' not in settings):
+    if ('in_filename_brd' not in settings and 
+            'in_filename_sch' not in settings):
         usage()
         sys.exit(3)
 
