@@ -15,8 +15,8 @@ import sys
 from itertools import groupby
 import getopt
 import re
-import cairocffi as cairo
 import math
+import cairocffi as cairo
 
 
 __version__ = "0.2.0"
@@ -121,7 +121,7 @@ class Module(object):
         self.location = [float(mod.attrib['x']), -float(mod.attrib['y'])]
         self.ref = mod.attrib['name']
         mirrored = False
-        angle = 0
+        angle = 0.0
         if "rot" in mod.attrib:
             rot = mod.attrib['rot']
             if rot[0] == "M":
@@ -138,10 +138,10 @@ class Module(object):
                     if footprint.attrib['name'] == mod_footprint:
                         self._parse_graphic(footprint)
         if self.bounds[0] is None:
-            self.bounds[0] = 0
-            self.bounds[1] = 0
-            self.bounds[2] = 0
-            self.bounds[3] = 0
+            self.bounds[0] = 0.0
+            self.bounds[1] = 0.0
+            self.bounds[2] = 0.0
+            self.bounds[3] = 0.0
 
     @staticmethod
     def _rotate_point(point, pivot, angle):
@@ -170,8 +170,8 @@ class Module(object):
         """
         for wire in footprint.iterfind("wire"):
             if wire.attrib['layer'] in ('21', '51'):
-                start = (float(wire.attrib['x1']), -float(wire.attrib['y1']))
-                end = (float(wire.attrib['x2']), -float(wire.attrib['y2']))
+                start = [float(wire.attrib['x1']), -float(wire.attrib['y1'])]
+                end = [float(wire.attrib['x2']), -float(wire.attrib['y2'])]
                 self._update_bounds(start)
                 self._update_bounds(end)
                 self.lines.append((start, end))
@@ -196,7 +196,7 @@ class Module(object):
                 self.lines.append(((start[0], end[1]), start))
         for circle in footprint.iterfind("circle"):
             if circle.attrib['layer'] in ('21', '51'):
-                center = (float(circle.attrib['x']), float(circle.attrib['y']))
+                center = [float(circle.attrib['x']), float(circle.attrib['y'])]
                 radius = float(circle.attrib['radius'])
                 self._update_bounds((center[0]-radius, center[1]-radius))
                 self._update_bounds((center[0]+radius, center[1]+radius))
@@ -220,7 +220,7 @@ class PCB(object):
     """
     representation of a PCB
     """
-    def __init__(self, board):
+    def __init__(self, board=None):
         """
         initialization of the object, some empty lists will be gfxeated and
         filled by calling the _parse function
@@ -231,7 +231,8 @@ class PCB(object):
         self.bounds = []
         self.height = 0
         self.width = 0
-        self._parse(board)
+        if board is not None:
+            self._parse(board)
 
     def render(self, gfx, where, max_w, max_h, highlights=None):
         """
@@ -322,7 +323,7 @@ class PCB(object):
         # Render edge arcs
         for arc in self.edge_arcs:
             gfx.new_sub_path()
-            gfx.arc(*arc) # pylint: disable=star-args
+            gfx.arc(*arc)
             gfx.stroke()
 
     def _find_highlighted_bounds(self, highlights):
@@ -417,11 +418,11 @@ class PCB(object):
         angle_end = PCB._get_angle(center, end)
         if curve > 0:
             self.edge_arcs.append((center[0], center[1], radius,
-                                   math.radians(angle_start), 
+                                   math.radians(angle_start),
                                    math.radians(angle_end)))
         else:
             self.edge_arcs.append((center[0], center[1], radius,
-                                   math.radians(angle_end), 
+                                   math.radians(angle_end),
                                    math.radians(angle_start)))
 
     def _parse_edges(self, board):
@@ -686,7 +687,10 @@ def write_part_list(elements, filename, set_delimiter):
             #python2 try catch is used to avoid crash in python3 because
             #"unicode" is not defined
             try:
-                row[key] = val.encode('utf-8') if isinstance(val, unicode) else val
+                if isinstance(val, unicode):
+                    row[key] = val.encode('utf-8')
+                else:
+                    row[key] = val
             except NameError:
                 continue
         dict_writer.writerow(row)
@@ -817,9 +821,9 @@ def get_eagle_root(settings):
     returns the root element of the supplied eagle xml file
     """
     if 'in_filename_brd' in settings:
-      return ET.ElementTree(file=settings['in_filename_brd']).getroot()
+        return ET.ElementTree(file=settings['in_filename_brd']).getroot()
     elif 'in_filename_sch' in settings:
-      return ET.ElementTree(file=settings['in_filename_sch']).getroot()
+        return ET.ElementTree(file=settings['in_filename_sch']).getroot()
 
 
 def bom_creation(settings):
@@ -838,7 +842,7 @@ def bom_creation(settings):
     elif 'in_filename_sch' in settings:
         variant_find_string = "schematic/variantdefs/variantdef"
         part_find_string = "schematic/parts/part"
-        pcb = "" #TODO: deal with the missing PCB data in a more elegant fashion
+        pcb = PCB()
 
 
 
@@ -871,7 +875,7 @@ def bom_creation(settings):
         # the BRD file does not contain this information
         if 'in_filename_sch' in settings:
             element['DESCRIPTION'] = get_first_line_text_from_html(
-                get_description(drawing,elem.attrib['library'],
+                get_description(drawing, elem.attrib['library'],
                                 elem.attrib['deviceset']))
             element['DEVICE'] = elem.attrib["device"]
             element['PACKAGE'] = get_package(drawing,
@@ -885,13 +889,15 @@ def bom_creation(settings):
                 attribute_value = attribute.attrib['value']
                 element[attribute_name] = attribute_value
         change_part_by_variant(elem, element, selected_variant)
-        if ('EXCLUDEFROMBOM' not in element and 
-            (('in_filename_sch' in settings and 
-              is_part_on_pcb(drawing, elem.attrib['library'],
-              elem.attrib['deviceset'])) or 'in_filename_brd' in settings)
-             and (settings['notestpads'] is False
-             or 'TP_SIGNAL_NAME' not in element)):
-            elements.append(element)
+        if 'EXCLUDEFROMBOM' in element:
+            continue
+        if settings['notestpads'] is True and 'TP_SIGNAL_NAME' in element:
+            continue
+        if not ('in_filename_sch' in settings and
+                is_part_on_pcb(drawing, elem.attrib['library'],
+                               elem.attrib['deviceset'])):
+            continue
+        elements.append(element)
     write_bom(elements, settings, pcb)
 
 def output_eagle_version(xml_root):
@@ -1008,7 +1014,7 @@ def main(argv):
     settings = parse_command_line_arguments(argv)
 
     #check sanity of settings
-    if ('in_filename_brd' not in settings and 
+    if ('in_filename_brd' not in settings and
             'in_filename_sch' not in settings):
         usage()
         sys.exit(3)
@@ -1026,7 +1032,7 @@ def main(argv):
             print("defaulting to bom type 'part'")
             settings['bom_type'] = 'part'
 
-    if not 'set_variant' in settings:
+    if 'set_variant' not in settings:
         settings['set_variant'] = ''
 
     bom_creation(settings)
