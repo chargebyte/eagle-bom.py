@@ -893,7 +893,7 @@ def bom_creation(settings):
             continue
         if settings['notestpads'] is True and 'TP_SIGNAL_NAME' in element:
             continue
-        if not ('in_filename_sch' in settings and
+        if ('in_filename_sch' in settings and not
                 is_part_on_pcb(drawing, elem.attrib['library'],
                                elem.attrib['deviceset'])):
             continue
