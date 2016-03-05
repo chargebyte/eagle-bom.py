@@ -19,21 +19,24 @@ execute the script: "python eagle-bom.py"
 this will give you a usage help as this:
 usage: 
 	mandatory arguments
-	-c / --csv=		 csv where you want to store the BOM
+	-c / --csv=		 csv where you want to store the BOM, may also be used for PDF output
 	exclusive mandatory arguments (i.e. choose one of the following)
 	-b / --brd=		 eagle board file that you want to use as input for the BOM
 	-s / --sch=		 eagle schematic file that you want to use as input for the BOM
 	
 	optional arguments
 	-h / --help		 print this help
-	-t / --type=		 specify the type ('value' or 'part' are valid values) of the output csv, default:part
-	-v / --variant=		 specify which variant should be used, default is to use the active variant as saved in the board file
+	-v		 enable verbose output
+	-t / --type=		 specify the type (valid types are value, part, sticker) of the output, default:part
+	--variant=		 specify which variant should be used, default is to use the active variant as saved in the board file
 	--separator=		 specify the separator that should be used as delimiter between each column in the output csv file, use 'TAB'to specify tabulator as separator
 	--notestpads		 excludes all parts that have a attriute 'TP_SIGNAL_NAME' with a value
-    --eagleversion       print the version of eagle that was used to generate the board or schematic (only needs arguments for board or schematic, not for csv)
+	--eagleversion		 print the version of eagle that was used to generate the board or schematic (only needs arguments for board or schematic, not for csv
+	
 	
 	special attributes for EAGLE parts that are interpreted by this script:
 		EXCLUDEFROMBOM		parts with this attribute set to a value other than blank will be excluded from the bom
 		DO_NOT_PLACE		usually should have the value 'yes' for instructing the manufacturer to leave this part unplaced
 		PROVIDED_BY		specify where the manufacturer gets the parts from
 		additionally DNP markings from eagle variants are converted to use the DO_NOT_PLACE format
+

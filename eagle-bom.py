@@ -916,7 +916,7 @@ def usage():
     version()
     print("usage: ")
     print("\tmandatory arguments")
-    print("\t-c / --csv=\t\t csv where you want to store the BOM")
+    print("\t-c / --csv=\t\t csv where you want to store the BOM, may also be used for PDF output")
     print("\texclusive mandatory arguments (i.e. choose one of the following)")
     print("\t-b / --brd=\t\t eagle board file that you want to use as "\
               "input for the BOM")
@@ -925,10 +925,11 @@ def usage():
     print("\t")
     print("\toptional arguments")
     print("\t-h / --help\t\t print this help")
+    print("\t-v\t\t enable verbose output")
     print("\t-t / --type=\t\t specify the type (valid types are "\
               + ", ".join(VALID_BOM_TYPES) + ""\
               ") of the output, default:part")
-    print("\t-v / --variant=\t\t specify which variant should be used, "\
+    print("\t--variant=\t\t specify which variant should be used, "\
               "default is to use the active variant as saved in the board file")
     print("\t--separator=\t\t specify the separator that should be used as "\
               "delimiter between each column in the output csv file, use 'TAB'"\
