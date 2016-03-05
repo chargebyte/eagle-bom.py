@@ -13,6 +13,7 @@ except ImportError:
     import xml.etree.ElementTree as ET
 
 import csv
+import logging as log
 import sys
 from itertools import groupby
 import getopt
@@ -253,13 +254,13 @@ def select_variant(drawing, variant_find_string, settings):
     if (selected_variant == "" and
         default_variant == "" and
         number_variant > 0):
-        print ("invalid variant defined, aborting")
+        log.error("invalid variant defined, aborting")
         return
     elif selected_variant == "":
         selected_variant = default_variant
 
     if number_variant > 0:
-        print ("variant: " + selected_variant)
+        log.info("variant: " + selected_variant)
 
     return selected_variant
 
@@ -267,7 +268,7 @@ def write_bom(elements, settings):
     """with a prepared list of all BOM elements this function looks at settings
     and calls the matching internal function that exports those list to the
     desired BOM format"""
-    print("writing bom of type " + settings['bom_type'])
+    log.info("writing bom of type " + settings['bom_type'])
     if settings['bom_type'] == 'value':
         write_value_list(elements, settings['out_filename'],
                          settings['set_delimiter'])
@@ -407,9 +408,10 @@ def parse_command_line_arguments(argv):
     settings = {}
     settings['notestpads'] = False
 
+    verbosity = False
     try:
         opts = getopt.getopt(argv,
-                                   "hc:b:t:s:v:",
+                                   "hc:b:t:s:v",
                                    ["help", "csv=",
                                     "brd=", "sch=",
                                     "type=",
@@ -428,7 +430,7 @@ def parse_command_line_arguments(argv):
         elif opt == "--version":
             version()
             sys.exit(0)
-        elif opt in list("--notestpads"):
+        elif opt == "--notestpads":
             settings['notestpads'] = True
         elif opt in ("-c", "--csv"):
             settings['out_filename'] = arg
@@ -441,16 +443,23 @@ def parse_command_line_arguments(argv):
                 settings['bom_type'] = arg
             else:
                 sys.exit(5)
-        elif opt in ("-v", "--variant"):
+        elif opt == "--variant":
             settings['set_variant'] = arg
-        elif opt in list("--separator"):
+        elif opt == "--separator":
             if arg == "TAB":
                 settings['set_delimiter'] = '\t'
             else:
                 settings['set_delimiter'] = arg
-        elif opt in list("--eagleversion"):
+        elif opt == "--eagleversion":
             settings['eagleversion'] = True
+        elif opt == "-v":
+            verbosity = True
 
+    if verbosity is True:
+        log.basicConfig(format="%(levelname)s (%(lineno)d): %(message)s", level=log.INFO)
+    else:
+        log.basicConfig(format="%(levelname)s: %(message)s", level=log.ERROR)
+    
     return settings
 
 def main(argv):
@@ -470,11 +479,11 @@ def main(argv):
             sys.exit(4)
 
         if 'set_delimiter' not in settings:
-            print("defaulting to separator \",\"")
+            log.info("defaulting to separator \",\"")
             settings['set_delimiter'] = ','
 
         if 'bom_type' not in settings:
-            print("defaulting to bom type 'part'")
+            log.info("defaulting to bom type 'part'")
             settings['bom_type'] = 'part'
 
     if not 'set_variant' in settings:
