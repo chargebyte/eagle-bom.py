@@ -916,7 +916,8 @@ def usage():
     version()
     print("usage: ")
     print("\tmandatory arguments")
-    print("\t-c / --csv=\t\t csv where you want to store the BOM, may also be used for PDF output")
+    print("\t-c / --csv=\t\t csv where you want to store the BOM, may also "\
+              "be used for PDF output")
     print("\texclusive mandatory arguments (i.e. choose one of the following)")
     print("\t-b / --brd=\t\t eagle board file that you want to use as "\
               "input for the BOM")
