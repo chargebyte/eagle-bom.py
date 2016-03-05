@@ -1015,7 +1015,7 @@ def parse_command_line_arguments(argv):
         log.basicConfig(format=log_format, level=log.INFO)
     else:
         log_format = "%(levelname)s: %(message)s"
-        log.basicConfig(format=log_firmat, level=log.ERROR)
+        log.basicConfig(format=log_format, level=log.ERROR)
     return settings
 
 def main(argv):
