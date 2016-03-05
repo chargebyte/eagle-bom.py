@@ -6,7 +6,9 @@ python:
 - '3.3'
 
 install:
+- pip install pylint
 - pip install nose
+- pip install cairocffi
 
 addons:
   apt:
