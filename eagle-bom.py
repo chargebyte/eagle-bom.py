@@ -1011,10 +1011,11 @@ def parse_command_line_arguments(argv):
             verbosity = True
 
     if verbosity is True:
-        log.basicConfig(format="%(levelname)s (%(lineno)d): %(message)s", level=log.INFO)
+        log_format = "%(levelname)s (%(lineno)d): %(message)s"
+        log.basicConfig(format=log_format, level=log.INFO)
     else:
-        log.basicConfig(format="%(levelname)s: %(message)s", level=log.ERROR)
-    
+        log_format = "%(levelname)s: %(message)s"
+        log.basicConfig(format=log_firmat, level=log.ERROR)
     return settings
 
 def main(argv):
