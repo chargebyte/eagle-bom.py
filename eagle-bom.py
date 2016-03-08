@@ -675,7 +675,7 @@ def write_part_list(elements, filename, set_delimiter):
     keys.sort()
     all_keys_sorted = fix_position_keys + keys
     elements.sort(key=sort_rows_for_csv)
-    file_pointer = open(filename, 'w')
+    file_pointer = filename and open(filename, 'w') or sys.stdout
     dict_writer = csv.DictWriter(file_pointer, all_keys_sorted,
                                  delimiter=set_delimiter, lineterminator='\n')
 
@@ -817,40 +817,34 @@ def write_bom(elements, settings, pcb):
     elif settings['bom_type'] == 'sticker':
         write_sticker_list(elements, settings['out_filename'], pcb)
 
-def get_eagle_root(settings):
-    """
-    returns the root element of the supplied eagle xml file
-    """
-    if 'in_filename_brd' in settings:
-        return ET.ElementTree(file=settings['in_filename_brd']).getroot()
-    elif 'in_filename_sch' in settings:
-        return ET.ElementTree(file=settings['in_filename_sch']).getroot()
-
-
 def bom_creation(settings):
     """this function reads the eagle XML and processes it to produce the
     bill of material
     """
+    in_file = "in_filename" in settings and settings['in_filename'] or sys.stdin
+    in_root = ET.ElementTree(file=in_file).getroot()
+
     #if eagleversion was set, just output the used version of eagle and exit
     if 'eagleversion' in settings:
-        return output_eagle_version(get_eagle_root(settings))
+        return output_eagle_version(in_root)
 
-    #prepare differences for brd and sch files
-    if 'in_filename_brd' in settings:
+    drawing = in_root[0]
+    elements = []
+
+    #find out what type of file is used and prepare differences for brd and
+    #sch files
+    if drawing.find("board"):
+        in_filetype = "brd"
         variant_find_string = "board/variantdefs/variantdef"
         part_find_string = "board/elements/element"
-        pcb = PCB(get_eagle_root(settings)[0])
-    elif 'in_filename_sch' in settings:
+        pcb = PCB(drawing)
+    elif drawing.find("schematic"):
+        in_filetype = "sch"
         variant_find_string = "schematic/variantdefs/variantdef"
         part_find_string = "schematic/parts/part"
         pcb = PCB()
-
-
-
-
-    drawing = get_eagle_root(settings)[0]
-    elements = []
-
+    else:
+        return
 
     #select which variant to use
     selected_variant = select_variant(drawing, variant_find_string, settings)
@@ -874,7 +868,7 @@ def bom_creation(settings):
             element['PACKAGE'] = elem.attrib['package']
         # only try to get description if we use the schematic...
         # the BRD file does not contain this information
-        if 'in_filename_sch' in settings:
+        if in_filetype == "sch":
             element['DESCRIPTION'] = get_first_line_text_from_html(
                 get_description(drawing, elem.attrib['library'],
                                 elem.attrib['deviceset']))
@@ -894,7 +888,7 @@ def bom_creation(settings):
             continue
         if settings['notestpads'] is True and 'TP_SIGNAL_NAME' in element:
             continue
-        if ('in_filename_sch' in settings and not
+        if (in_filetype == "sch" and not
                 is_part_on_pcb(drawing, elem.attrib['library'],
                                elem.attrib['deviceset'])):
             continue
@@ -915,21 +909,16 @@ def usage():
     """print usage messages to the command line"""
     version()
     print("usage: ")
-    print("\tmandatory arguments")
-    print("\t-c / --csv=\t\t csv where you want to store the BOM, may also "\
-              "be used for PDF output")
-    print("\texclusive mandatory arguments (i.e. choose one of the following)")
-    print("\t-b / --brd=\t\t eagle board file that you want to use as "\
-              "input for the BOM")
-    print("\t-s / --sch=\t\t eagle schematic file that you want to use "\
-              "as input for the BOM")
-    print("\t")
-    print("\toptional arguments")
+    print("arguments")
     print("\t-h / --help\t\t print this help")
-    print("\t-v\t\t enable verbose output")
+    print("\t-v\t\t\t enable verbose output")
     print("\t-t / --type=\t\t specify the type (valid types are "\
               + ", ".join(VALID_BOM_TYPES) + ""\
               ") of the output, default:part")
+    print("\t-o / --out=\t\t csv where you want to store the BOM, may also "\
+              "be used for PDF output, default:stdout")
+    print("\t-i / --in=\t\t eagle board/schematic file that you want to use "\
+              "as input for the BOM, default:stdin")
     print("\t--variant=\t\t specify which variant should be used, "\
               "default is to use the active variant as saved in the board file")
     print("\t--separator=\t\t specify the separator that should be used as "\
@@ -964,13 +953,15 @@ def parse_command_line_arguments(argv):
     #pylint: disable=R0912
     settings = {}
     settings['notestpads'] = False
+    settings['out_filename'] = None
+    settings['in_filename'] = None
 
     verbosity = False
     try:
         opts = getopt.getopt(argv,
-                             "hc:b:t:s:v",
-                             ["help", "csv=",
-                              "brd=", "sch=",
+                             "hi:o:t:v",
+                             ["help", "out=",
+                              "in=",
                               "type=",
                               "separator=",
                               "variant=",
@@ -989,12 +980,10 @@ def parse_command_line_arguments(argv):
             sys.exit(0)
         elif opt == "--notestpads":
             settings['notestpads'] = True
-        elif opt in ("-c", "--csv"):
+        elif opt in ("-o", "--out"):
             settings['out_filename'] = arg
-        elif opt in ("-b", "--brd"):
-            settings['in_filename_brd'] = arg
-        elif opt in ("-s", "--sch"):
-            settings['in_filename_sch'] = arg
+        elif opt in ("-i", "--in"):
+            settings['in_filename'] = arg
         elif opt in ("-t", "--type"):
             if arg in VALID_BOM_TYPES:
                 settings['bom_type'] = arg
@@ -1025,27 +1014,17 @@ def main(argv):
 
     settings = parse_command_line_arguments(argv)
 
-    #check sanity of settings
-    if ('in_filename_brd' not in settings and
-            'in_filename_sch' not in settings):
-        usage()
-        sys.exit(3)
+    if 'set_delimiter' not in settings:
+        log.info("defaulting to separator \",\"")
+        settings['set_delimiter'] = ','
 
-    if 'eagleversion' not in settings:
-        if 'out_filename' not in settings:
-            usage()
-            sys.exit(4)
-
-        if 'set_delimiter' not in settings:
-            log.info("defaulting to separator \",\"")
-            settings['set_delimiter'] = ','
-
-        if 'bom_type' not in settings:
-            log.info("defaulting to bom type 'part'")
-            settings['bom_type'] = 'part'
+    if 'bom_type' not in settings:
+        log.info("defaulting to bom type 'part'")
+        settings['bom_type'] = 'part'
 
     if 'set_variant' not in settings:
         settings['set_variant'] = ''
+
 
     bom_creation(settings)
 

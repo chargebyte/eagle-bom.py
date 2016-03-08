@@ -12,7 +12,7 @@ def test_simple_sch():
 
     #test sch > bom way
     try:
-        retcode = call("python eagle-bom.py" + " --sch=test/files/" + simple_sch + " --csv=/tmp/simple.csv", shell=True)
+        retcode = call("python eagle-bom.py" + " --in=test/files/" + simple_sch + " --out=/tmp/simple.csv", shell=True)
         assert retcode == 0
     except OSError as e:
         assert 0
@@ -22,7 +22,7 @@ def test_simple_sch():
 def test_simple_brd(): 
     #test brd > bom way
     try:
-        retcode = call("python eagle-bom.py" + " --brd=test/files/" + simple_brd + " --csv=/tmp/simple.csv", shell=True)
+        retcode = call("python eagle-bom.py" + " --in=test/files/" + simple_brd + " --out=/tmp/simple.csv", shell=True)
         assert retcode == 0
     except OSError as e:
         assert 0
@@ -33,15 +33,9 @@ def test_cli():
     try:
         #call script with garbage parameters
         retcode = call("python eagle-bom.py" + " --foobar", shell=True)
-        assert retcode == 2
-        #call script without input file
-        retcode = call("python eagle-bom.py --csv=/tmp/simple.csv", shell=True)
-        assert retcode == 3
-        #call script without output file
-        retcode = call("python eagle-bom.py" + " --brd=test/files/" + simple_brd, shell=True)
-        assert retcode == 4
+        assert retcode == 2	
         #try to pass an invalid output type
-        retcode = call("python eagle-bom.py" + " --brd=test/files/" + simple_brd + " --csv=/tmp/simple.csv -t foobar", shell=True)
+        retcode = call("python eagle-bom.py" + " --in=test/files/" + simple_brd + " --out=/tmp/simple.csv -t foobar", shell=True)
         assert retcode == 5
         #TODO: add more cli tests
     except OSError as e:
