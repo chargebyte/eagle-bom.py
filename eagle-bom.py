@@ -1008,7 +1008,7 @@ def parse_command_line_arguments(argv):
 
     if verbosity <= log.ERROR:
         log_format = "%(levelname)s: %(message)s"
-    else:        
+    else:
         log_format = "%(levelname)s (%(lineno)d): %(message)s"
 
     log.basicConfig(format=log_format, level=verbosity)
