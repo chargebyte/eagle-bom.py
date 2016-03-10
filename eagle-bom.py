@@ -620,7 +620,8 @@ def write_sticker_list(elements, filename, pcb):
     elements_grouped = get_value_list(elements)
 
     mm_to_pt = 2.835
-    pdf = cairo.PDFSurface(filename, PAGE_WIDTH*mm_to_pt, PAGE_HEIGHT*mm_to_pt)
+    file_pointer = filename and open(filename, 'w') or sys.stdout
+    pdf = cairo.PDFSurface(file_pointer, PAGE_WIDTH*mm_to_pt, PAGE_HEIGHT*mm_to_pt)
     gfx = cairo.Context(pdf)
 
     # Scale user units to millimetres
@@ -956,7 +957,7 @@ def parse_command_line_arguments(argv):
     settings['out_filename'] = None
     settings['in_filename'] = None
 
-    verbosity = False
+    verbosity = log.ERROR
     try:
         opts = getopt.getopt(argv,
                              "hi:o:t:v",
@@ -999,14 +1000,18 @@ def parse_command_line_arguments(argv):
         elif opt == "--eagleversion":
             settings['eagleversion'] = True
         elif opt == "-v":
-            verbosity = True
+            verbosity = log.WARNING
+        elif opt == "-vv":
+            verbosity = log.INFO
+        elif opt == "-vvv":
+            verbosity = log.DEBUG
 
-    if verbosity is True:
-        log_format = "%(levelname)s (%(lineno)d): %(message)s"
-        log.basicConfig(format=log_format, level=log.INFO)
-    else:
+    if verbosity <= log.ERROR:
         log_format = "%(levelname)s: %(message)s"
-        log.basicConfig(format=log_format, level=log.ERROR)
+    else:        
+        log_format = "%(levelname)s (%(lineno)d): %(message)s"
+
+    log.basicConfig(format=log_format, level=verbosity)
     return settings
 
 def main(argv):
