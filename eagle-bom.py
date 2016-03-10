@@ -641,6 +641,7 @@ def write_sticker_list(elements, filename, pcb):
                             "",
                             "")
             bom.append(bom_line)
+    log.debug("number of stickers: "+str(len(bom)))
 
     for line, label in zip(bom, labels):
         line.render(gfx, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
@@ -1001,13 +1002,11 @@ def parse_command_line_arguments(argv):
         elif opt == "--eagleversion":
             settings['eagleversion'] = True
         elif opt == "-v":
-            verbosity = log.WARNING
-        elif opt == "-vv":
-            verbosity = log.INFO
-        elif opt == "-vvv":
-            verbosity = log.DEBUG
+            verbosity -= 10
+            if verbosity > 0:
+                verbosity = 0
 
-    if verbosity <= log.ERROR:
+    if verbosity >= log.ERROR:
         log_format = "%(levelname)s: %(message)s"
     else:
         log_format = "%(levelname)s (%(lineno)d): %(message)s"
@@ -1020,7 +1019,7 @@ def main(argv):
 
     settings = parse_command_line_arguments(argv)
 
-    if 'set_delimiter' not in settings:
+    if 'set_delimiter' not in settings and not settings['bom_type'] == "sticker":
         log.info("defaulting to separator \",\"")
         settings['set_delimiter'] = ','
 
