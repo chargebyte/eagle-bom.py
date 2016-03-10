@@ -621,7 +621,8 @@ def write_sticker_list(elements, filename, pcb):
 
     mm_to_pt = 2.835
     file_pointer = filename and open(filename, 'w') or sys.stdout
-    pdf = cairo.PDFSurface(file_pointer, PAGE_WIDTH*mm_to_pt, PAGE_HEIGHT*mm_to_pt)
+    pdf = cairo.PDFSurface(file_pointer, PAGE_WIDTH*mm_to_pt,
+                           PAGE_HEIGHT*mm_to_pt)
     gfx = cairo.Context(pdf)
 
     # Scale user units to millimetres
