@@ -641,12 +641,13 @@ def write_sticker_list(elements, filename, pcb):
                             "",
                             "")
             bom.append(bom_line)
-    log.debug("number of stickers: "+str(len(bom)))
+    log.debug("number of labels: "+str(len(bom)))
 
     for line, label in zip(bom, labels):
         line.render(gfx, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
         pcb.render(gfx, (label[0]+1, label[1]+14), LABEL_WIDTH-2,
                    LABEL_HEIGHT-14, line.refs)
+        log.debug("adding label for " + str(line.refs) + " at " + str(label))
     gfx.show_page()
 
 def write_value_list(elements, filename, set_delimiter):
