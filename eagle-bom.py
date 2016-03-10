@@ -45,6 +45,22 @@ SPACING_Y = 2.0
 PAGE_WIDTH = 297
 PAGE_HEIGHT = 210
 
+# Custom formatter
+class LogFormatter(log.Formatter):
+    '''
+    class used for the output formatting
+    '''
+    FORMATS = {log.DEBUG :"DEBUG: %(module)s/%(funcName)s(%(lineno)d): "\
+                          "%(message)s",
+               log.INFO : "%(message)s",
+               log.WARNING: "WARNING: %(message)s",
+               log.ERROR : "ERROR: %(message)s",
+               'DEFAULT' : "%(levelname)s: %(message)s"}
+
+    def format(self, record):
+        self._fmt = self.FORMATS.get(record.levelno, self.FORMATS['DEFAULT'])
+        return log.Formatter.format(self, record)
+
 class Module(object):
     """
     representation of a single component assembled to a PCB
@@ -607,11 +623,13 @@ def sheet_positions(gfx, label_width, label_height, labels_x, labels_y,
     """Forever yields a new (x, y) of successive label top-left positions,
     calling gfx.show_page() when the current page is exhausted.
     """
+    log.debug("LABELS_X: " + str(labels_x) + " *_Y: " + str(labels_y))
     while True:
-        for x_position in range(labels_x):
-            for y_position in range(labels_y):
-                x_position = margin_left + x_position*(label_width + spacing_x)
-                y_position = margin_top + y_position*(label_height + spacing_y)
+        for x_index in range(labels_x):
+            for y_index in range(labels_y):
+                log.debug("x: " + str(x_index) + " y: " + str(y_index))
+                x_position = margin_left + x_index*(label_width + spacing_x)
+                y_position = margin_top + y_index*(label_height + spacing_y)
                 yield (x_position, y_position)
         gfx.show_page()
 
@@ -642,12 +660,11 @@ def write_sticker_list(elements, filename, pcb):
                             "")
             bom.append(bom_line)
     log.debug("number of labels: "+str(len(bom)))
-
     for line, label in zip(bom, labels):
         line.render(gfx, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
         pcb.render(gfx, (label[0]+1, label[1]+14), LABEL_WIDTH-2,
                    LABEL_HEIGHT-14, line.refs)
-        log.debug("adding label for " + str(line.refs) + " at " + str(label))
+        log.debug("adding label at " + str(label) + " for " + str(line.refs))
     gfx.show_page()
 
 def write_value_list(elements, filename, set_delimiter):
@@ -915,7 +932,9 @@ def usage():
     print("usage: ")
     print("arguments")
     print("\t-h / --help\t\t print this help")
-    print("\t-v\t\t\t enable verbose output")
+    print("\t-v\t\t\t enable verbose output, warning level and above")
+    print("\t-vv\t\t\t enable verbose output, info level and above")
+    print("\t-vvv\t\t\t enable verbose output, debug level and above")
     print("\t-t / --type=\t\t specify the type (valid types are "\
               + ", ".join(VALID_BOM_TYPES) + ""\
               ") of the output, default:part")
@@ -1004,15 +1023,14 @@ def parse_command_line_arguments(argv):
             settings['eagleversion'] = True
         elif opt == "-v":
             verbosity -= 10
-            if verbosity > 0:
+            if verbosity < 0:
                 verbosity = 0
 
-    if verbosity >= log.ERROR:
-        log_format = "%(levelname)s: %(message)s"
-    else:
-        log_format = "%(levelname)s (%(lineno)d): %(message)s"
+    hdlr = log.StreamHandler(sys.stderr)
+    hdlr.setFormatter(LogFormatter())
+    log.root.addHandler(hdlr)
+    log.root.setLevel(verbosity)
 
-    log.basicConfig(format=log_format, level=verbosity)
     return settings
 
 def main(argv):
@@ -1020,13 +1038,14 @@ def main(argv):
 
     settings = parse_command_line_arguments(argv)
 
-    if 'set_delimiter' not in settings and not settings['bom_type'] == "sticker":
-        log.info("defaulting to separator \",\"")
-        settings['set_delimiter'] = ','
-
     if 'bom_type' not in settings:
         log.info("defaulting to bom type 'part'")
         settings['bom_type'] = 'part'
+
+    if 'set_delimiter' not in settings \
+            and not settings['bom_type'] == "sticker":
+        log.info("defaulting to separator \",\"")
+        settings['set_delimiter'] = ','
 
     if 'set_variant' not in settings:
         settings['set_variant'] = ''
