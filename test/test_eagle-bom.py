@@ -8,7 +8,25 @@ simple_sch_csv = "blink1_v1a_sch.csv"
 simple_brd = "blink1_v1a.brd"
 simple_brd_csv = "blink1_v1a_brd.csv"
 
-def test_simple_sch():
+def test_sticker_bom():
+    try:
+        retcode = call("python eagle-bom.py" + " --in=test/files/" + simple_brd + " --out=/tmp/sticker.pdf -t sticker", shell=True)
+        assert retcode == 0
+    except OSError as e:
+        assert 0
+
+    #assert filecmp.cmp('/tmp/simple.csv', 'test/files/'+simple_brd_csv) 
+    
+
+def test_value_bom(): 
+    #test brd > bom way
+    try:
+        retcode = call("python eagle-bom.py" + " --in=test/files/" + simple_brd + " --out=/tmp/simple.csv", shell=True)
+        assert retcode == 0
+    except OSError as e:
+        assert 0
+
+    assert filecmp.cmp('/tmp/simple.csv', 'test/files/'+simple_brd_csv) 
 
     #test sch > bom way
     try:
@@ -19,15 +37,6 @@ def test_simple_sch():
 
     assert filecmp.cmp('/tmp/simple.csv', 'test/files/'+simple_sch_csv) 
     
-def test_simple_brd(): 
-    #test brd > bom way
-    try:
-        retcode = call("python eagle-bom.py" + " --in=test/files/" + simple_brd + " --out=/tmp/simple.csv", shell=True)
-        assert retcode == 0
-    except OSError as e:
-        assert 0
-
-    assert filecmp.cmp('/tmp/simple.csv', 'test/files/'+simple_brd_csv) 
 
 def test_cli_errors():
     try:
