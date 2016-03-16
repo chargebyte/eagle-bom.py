@@ -1,6 +1,8 @@
 from subprocess import call
 import filecmp
 import sys
+import tempfile
+
 
 simple_sch = "blink1_v1a.sch"
 simple_sch_csv = "blink1_v1a_sch.csv"
@@ -19,15 +21,19 @@ def get_formatted_content(pdf_content):
 
 def test_sticker_bom():
     try:
-        retcode = call("python eagle-bom.py" + " --in=test/files/" + simple_brd + " --out=/tmp/sticker.pdf -t sticker", shell=True)
-        assert retcode == 0
-    except OSError as e:
-        assert 0
+        temp = tempfile.NamedTemporaryFile()
+        try:
+            print (temp.name)
+            retcode = call("python eagle-bom.py" + " --in=test/files/" + simple_brd + " --out="+temp.name+" -t sticker", shell=True)
+            assert retcode == 0
+        except OSError as e:
+            assert 0
 
-    c1 = get_formatted_content(open('test/files'+simple_brd_pdf).read())
-    c2 = get_formatted_content(open('/tmp/sticker.pdf').read())
-    assert cmp(c1, c2)
-
+        c1 = get_formatted_content(open('test/files'+simple_brd_pdf).read())
+        c2 = get_formatted_content(open('/tmp/sticker.pdf').read())
+        assert cmp(c1, c2)
+    finally:
+        temp.close()
 def test_value_bom(): 
     #test brd > bom way
     try:
