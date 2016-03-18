@@ -29,8 +29,8 @@ def test_sticker_bom():
         except OSError as e:
             assert 0
 
-        c1 = get_formatted_content(open('test/files'+simple_brd_pdf).read())
-        c2 = get_formatted_content(open('/tmp/sticker.pdf').read())
+        c1 = get_formatted_content(open('test/files/'+simple_brd_pdf).read())
+        c2 = get_formatted_content(open(temp.name).read())
         assert cmp(c1, c2)
     finally:
         temp.close()
