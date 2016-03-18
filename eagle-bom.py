@@ -704,17 +704,6 @@ def write_part_list(elements, filename, set_delimiter):
     dict_writer.writer.writerow(all_keys_sorted)
     #write content row by row
     for row in elements:
-        for key, val in row.items():
-            #convert strings so that the dict writer can process unicode in
-            #python2 try catch is used to avoid crash in python3 because
-            #"unicode" is not defined
-            try:
-                if isinstance(val, unicode):
-                    row[key] = val.encode('utf-8')
-                else:
-                    row[key] = val
-            except NameError:
-                continue
         dict_writer.writerow(row)
     return 0
 
@@ -829,6 +818,21 @@ def write_bom(elements, settings, pcb):
     and calls the matching internal function that exports those list to the
     desired BOM format"""
     log.info("writing bom of type " + settings['bom_type'])
+
+    for row in elements:
+        for key, val in row.items():
+            #convert strings so that the dict writer can process unicode in
+            #python2 try catch is used to avoid crash in python3 because
+            #"unicode" is not defined
+            try:
+                if isinstance(val, unicode):
+                    row[key] = val.encode('utf-8')
+                else:
+                    row[key] = val
+            except NameError:
+                continue
+
+
     if settings['bom_type'] == 'value':
         write_value_list(elements, settings['out_filename'],
                          settings['set_delimiter'])
