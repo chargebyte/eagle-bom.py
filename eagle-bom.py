@@ -14,7 +14,12 @@ import csv
 import logging as log
 import sys
 from itertools import groupby
-from itertools import izip
+
+try:
+    from itertools import izip as zip
+except ImportError: # will be 3.x series
+    pass
+
 import getopt
 import re
 import math
@@ -661,7 +666,7 @@ def write_sticker_list(elements, filename, pcb):
                             "")
             bom.append(bom_line)
     log.debug("number of labels: "+str(len(bom)))
-    for line, label in izip(bom, labels):
+    for line, label in zip(bom, labels):
         line.render(gfx, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
         pcb.render(gfx, (label[0]+1, label[1]+14), LABEL_WIDTH-2,
                    LABEL_HEIGHT-14, line.refs)
