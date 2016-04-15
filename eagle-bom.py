@@ -637,6 +637,7 @@ def sheet_positions(gfx, label_width, label_height, labels_x, labels_y,
                 x_position = margin_left + x_index*(label_width + spacing_x)
                 y_position = margin_top + y_index*(label_height + spacing_y)
                 yield (x_position, y_position)
+        log.debug("finishing page")
         gfx.show_page()
 
 def write_sticker_list(elements, filename, pcb):
@@ -644,7 +645,7 @@ def write_sticker_list(elements, filename, pcb):
     elements_grouped = get_value_list(elements)
 
     mm_to_pt = 2.835
-    file_pointer = filename and open(filename, 'w') or sys.stdout
+    file_pointer = filename and open(filename, 'wb') or sys.stdout
     pdf = cairo.PDFSurface(file_pointer, PAGE_WIDTH*mm_to_pt,
                            PAGE_HEIGHT*mm_to_pt)
     gfx = cairo.Context(pdf)
@@ -671,6 +672,7 @@ def write_sticker_list(elements, filename, pcb):
         pcb.render(gfx, (label[0]+1, label[1]+14), LABEL_WIDTH-2,
                    LABEL_HEIGHT-14, line.refs)
         log.debug("adding label at " + str(label) + " for " + str(line.refs))
+    log.debug("finishing page")
     gfx.show_page()
 
 def write_value_list(elements, filename, set_delimiter):
