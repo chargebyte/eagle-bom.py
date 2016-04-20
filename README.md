@@ -7,7 +7,7 @@ It was initially written to fix a problem that eagle had with grouping parts wit
 
 A side effect of using the ULP is that you do not need to have eagle on your machine that generates the releases.
 
-The script is compatible with python 2.7, 3.2 and 3.3
+The script is tested with python 2.7, 3.3
 
 [![Build Status](https://travis-ci.org/I2SE/eagle-bom.py.svg?branch=master)](https://travis-ci.org/I2SE/eagle-bom.py)
 
