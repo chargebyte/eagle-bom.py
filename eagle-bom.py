@@ -16,9 +16,9 @@ import sys
 from itertools import groupby
 
 try:
-    from itertools import izip
+    from itertools import izip as _izip
 except ImportError: # will be 3.x series
-    izip = zip
+    _izip = zip
 
 import getopt
 import re
@@ -667,7 +667,7 @@ def write_sticker_list(elements, filename, pcb):
                             "")
             bom.append(bom_line)
     log.debug("number of labels: "+str(len(bom)))
-    for line, label in izip(bom, labels):
+    for line, label in _izip(bom, labels):
         line.render(gfx, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
         pcb.render(gfx, (label[0]+1, label[1]+14), LABEL_WIDTH-2,
                    LABEL_HEIGHT-14, line.refs)
