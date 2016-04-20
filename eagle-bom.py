@@ -18,7 +18,7 @@ from itertools import groupby
 try:
     from itertools import izip
 except ImportError: # will be 3.x series
-    from __builtin__ import zip as izip
+    izip = zip
 
 import getopt
 import re
