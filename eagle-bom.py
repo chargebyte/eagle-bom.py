@@ -94,6 +94,7 @@ class Module(object):
         gfx.save()
         gfx.translate(self.location[0], self.location[1])
         gfx.set_line_width(0.05)
+        log.debug(str(self.ref) + ":" + str(self.location))
         if len(self.location) >= 3:
             gfx.rotate(-self.location[2] * math.pi/180)
         if self.lines or self.circs:
@@ -103,6 +104,7 @@ class Module(object):
                 gfx.stroke()
             for circ in self.circs:
                 gfx.new_sub_path()
+                log.debug("\tcircle at:" + str(circ[0][0]) + " / " + str(circ[0][1]) + " / " + str(circ[1]))
                 gfx.arc(circ[0][0], circ[0][1], circ[1], 0, 2*math.pi)
         gfx.restore()
 
@@ -219,7 +221,7 @@ class Module(object):
                 self.lines.append(((start[0], end[1]), start))
         for circle in footprint.iterfind("circle"):
             if circle.attrib['layer'] in ('21', '51'):
-                center = [float(circle.attrib['x']), float(circle.attrib['y'])]
+                center = [float(circle.attrib['x']), -float(circle.attrib['y'])]
                 radius = float(circle.attrib['radius'])
                 self._update_bounds((center[0]-radius, center[1]-radius))
                 self._update_bounds((center[0]+radius, center[1]+radius))
