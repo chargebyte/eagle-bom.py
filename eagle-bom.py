@@ -104,7 +104,8 @@ class Module(object):
                 gfx.stroke()
             for circ in self.circs:
                 gfx.new_sub_path()
-                log.debug("\tcircle at:" + str(circ[0][0]) + " / " + str(circ[0][1]) + " / " + str(circ[1]))
+                log.debug("\tcircle at:" + str(circ[0][0]) + " / " +
+                          str(circ[0][1]) + " / " + str(circ[1]))
                 gfx.arc(circ[0][0], circ[0][1], circ[1], 0, 2*math.pi)
         gfx.restore()
 
