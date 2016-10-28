@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """ this tool extracts information from cadsoft's eagle .brd and .sch
 files to build a bill-of material
 """
