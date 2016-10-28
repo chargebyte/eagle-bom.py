@@ -11,6 +11,16 @@ The script is tested with python 2.7, 3.3
 
 [![Build Status](https://travis-ci.org/I2SE/eagle-bom.py.svg?branch=master)](https://travis-ci.org/I2SE/eagle-bom.py)
 
+Installation
+------------
+
+This scripts requires cairocffi. On Debian distributions, there exists no pre-packaged
+version of this python module, so you have to install the python development environment
+and use pip to install this dependency:
+
+    $ apt-get install python-dev libffi-dev python-pip
+    $ pip install cairocffi
+
 You can use eagle-bom.py as follows:
 ------------------------------------
 
