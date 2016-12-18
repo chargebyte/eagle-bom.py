@@ -870,7 +870,7 @@ def write_bom(elements, settings, pcb):
     #remove side of PCB from the BOM since this is only relevant for
     #stickerbom and would only lead to split BOM rows for type value
     for elem in elements:
-        if "__SIDE" in elem: 
+        if "__SIDE" in elem:
             del elem["__SIDE"]
 
     if settings['bom_type'] == 'part':
