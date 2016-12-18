@@ -84,16 +84,25 @@ class Module(object):
         self.bounds = []
         self._parse(mod, lib)
 
-    def render(self, gfx):
+    def render(self, gfx, side):
         """"
         Render the footprint in the board coordinate system.
         """
-        #if package is on bottom do not render anything
-        if len(self.location) == 4 and self.location[3] is True:
+        #if package is on bottom and "TOP" was requested do not render anything
+        if len(self.location) == 4 and (side == "TOP" and self.location[3]):
+            return
+        #if package is on top and "BOT" was requested do not render anything
+        if len(self.location) == 4 and (side == "BOT" and not self.location[3]):
             return
 
         gfx.save()
         gfx.translate(self.location[0], self.location[1])
+
+        #flip image if bottom side is requested
+        if side == "BOT":
+            mtrx = cairo.Matrix(-1, 0, 0, 1, 0, 0)
+            gfx.transform(mtrx)
+
         gfx.set_line_width(0.05)
         log.debug(str(self.ref) + ":" + str(self.location))
         if len(self.location) >= 3:
@@ -110,12 +119,15 @@ class Module(object):
                 gfx.arc(circ[0][0], circ[0][1], circ[1], 0, 2*math.pi)
         gfx.restore()
 
-    def render_highlight(self, gfx):
+    def render_highlight(self, gfx, side):
         """
         Render a highlight at the footprint's position and of its size.
         """
-        #if package is on bottom do not render anything
-        if len(self.location) == 4 and self.location[3] is True:
+        #if package is on bottom and "TOP" was requested do not render anything
+        if len(self.location) == 4 and (side == "TOP" and self.location[3]):
+            return
+        #if package is on top and "BOT" was requested do not render anything
+        if len(self.location) == 4 and (side == "BOT" and not self.location[3]):
             return
 
         gfx.save()
@@ -261,13 +273,24 @@ class PCB(object):
         if board is not None:
             self._parse(board)
 
-    def render(self, gfx, where, max_w, max_h, highlights=None):
+    def render(self, gfx, where, max_w, max_h, side, highlights=None):
         """
         Render the PCB, with the top left corner at `where`,
         occupying at most `max_w` width and `max_h` height,
         and draw a highlight under parts whose reference is in `highlights`.
         """
         gfx.save()
+
+        #flip image if bottom side is requested
+        if side == "BOT":
+            flip_x = -1
+            flip_y = 1
+            cen_y = 0
+            cen_x = max_w/2 + where[0]
+            mtrx = cairo.Matrix(-1, 0, 0, 1, cen_x*(1-flip_x), cen_y*(flip_y-1))
+            gfx.transform(mtrx)
+
+
         gfx.set_line_width(0.1)
 
         # Set a clip to ensure we occupy at most max_w and max_h
@@ -325,13 +348,13 @@ class PCB(object):
         gfx.set_source_rgb(1.0, 0.5, 0.5)
         for module in self.modules:
             if module.ref in highlights:
-                module.render_highlight(gfx)
+                module.render_highlight(gfx, side)
 
         gfx.set_source_rgb(0, 0, 0)
 
         # Render modules
         for module in self.modules:
-            module.render(gfx)
+            module.render(gfx, side)
 
         self._render_pcb_border(gfx)
 
@@ -501,7 +524,7 @@ class Line(object):
     """
     representation of a BOM Line
     """
-    def __init__(self, refs, value, footprint, supplier, code):
+    def __init__(self, refs, value, footprint, supplier, code, side):
         """
         initiates the object with the passed arguments
         refs is a list, all other parameters are strings
@@ -511,6 +534,7 @@ class Line(object):
         self.footprint = footprint
         self.supplier = supplier
         self.code = code
+        self.side = side
 
     def render(self, gfx, where, width, height):
         """
@@ -543,7 +567,7 @@ class Line(object):
                              cairo.FONT_WEIGHT_NORMAL)
         gfx.set_font_size(3.0)
         gfx.move_to(where[0]+3, where[1]+12)
-        gfx.show_text("{} {}".format(self.supplier, self.code))
+        gfx.show_text("{} {} {}".format(self.side, self.supplier, self.code))
 
         gfx.restore()
 
@@ -668,13 +692,14 @@ def write_sticker_list(elements, filename, pcb):
                             line['VALUE'],
                             line['PACKAGE'],
                             "",
-                            "")
+                            "",
+                            line['__SIDE'])
             bom.append(bom_line)
     log.debug("number of labels: "+str(len(bom)))
     for line, label in _izip(bom, labels):
         line.render(gfx, (label[0]+1, label[1]), LABEL_WIDTH-2, 14)
         pcb.render(gfx, (label[0]+1, label[1]+14), LABEL_WIDTH-2,
-                   LABEL_HEIGHT-14, line.refs)
+                   LABEL_HEIGHT-14, line.side, line.refs)
         log.debug("adding label at " + str(label) + " for " + str(line.refs))
     log.debug("finishing page")
     gfx.show_page()
@@ -843,16 +868,23 @@ def write_bom(elements, settings, pcb):
                     row[key] = val
             except NameError:
                 continue
+    if settings['bom_type'] == 'sticker':
+        write_sticker_list(elements, settings['out_filename'], pcb)
+
+    #remove side of PCB from the BOM since this is only relevant for
+    #stickerbom and would only lead to split BOM rows for type value
+    for elem in elements:
+        if "__SIDE" in elem:
+            del elem["__SIDE"]
+
+    if settings['bom_type'] == 'part':
+        write_part_list(elements, settings['out_filename'],
+                        settings['set_delimiter'])
 
 
     if settings['bom_type'] == 'value':
         write_value_list(elements, settings['out_filename'],
                          settings['set_delimiter'])
-    elif settings['bom_type'] == 'part':
-        write_part_list(elements, settings['out_filename'],
-                        settings['set_delimiter'])
-    elif settings['bom_type'] == 'sticker':
-        write_sticker_list(elements, settings['out_filename'], pcb)
 
 def bom_creation(settings):
     """this function reads the eagle XML and processes it to produce the
@@ -914,6 +946,12 @@ def bom_creation(settings):
                                              elem.attrib['library'],
                                              elem.attrib['deviceset'],
                                              elem.attrib['device'])
+        if in_filetype == "brd":
+            if 'rot' in elem.attrib and elem.attrib['rot'][0] == "M":
+                element['__SIDE'] = "BOT"
+            else:
+                element['__SIDE'] = "TOP"
+
         #get all attributes of the element
         for attribute in elem.iterfind('attribute'):
             if 'value' in attribute.attrib:
