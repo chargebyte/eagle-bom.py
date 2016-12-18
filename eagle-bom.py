@@ -93,6 +93,12 @@ class Module(object):
 
         gfx.save()
         gfx.translate(self.location[0], self.location[1])
+
+        #flip image if bottom side is requested
+        if side == "BOT":
+            mtrx = cairo.Matrix(-1,0,0,1,0,0)
+            gfx.transform (mtrx);
+
         gfx.set_line_width(0.05)
         if len(self.location) >= 3:
             gfx.rotate(-self.location[2] * math.pi/180)
