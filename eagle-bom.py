@@ -87,8 +87,11 @@ class Module(object):
         """"
         Render the footprint in the board coordinate system.
         """
-        #if package is on bottom do not render anything
-        if len(self.location) == 4 and ((side == "TOP" and self.location[3] is True) or (side == "BOT" and self.location[3] is False)):
+        #if package is on bottom and "TOP" was requested do not render anything
+        if len(self.location) == 4 and (side == "TOP" and self.location[3]):
+            return
+        #if package is on top and "BOT" was requested do not render anything
+        if len(self.location) == 4 and (side == "BOT" and not self.location[3]):
             return
 
         gfx.save()
@@ -96,8 +99,8 @@ class Module(object):
 
         #flip image if bottom side is requested
         if side == "BOT":
-            mtrx = cairo.Matrix(-1,0,0,1,0,0)
-            gfx.transform (mtrx);
+            mtrx = cairo.Matrix(-1, 0, 0, 1, 0, 0)
+            gfx.transform(mtrx)
 
         gfx.set_line_width(0.05)
         if len(self.location) >= 3:
@@ -116,8 +119,11 @@ class Module(object):
         """
         Render a highlight at the footprint's position and of its size.
         """
-        #if package is on bottom do not render anything
-        if len(self.location) == 4 and ((side == "TOP" and self.location[3] is True) or (side == "BOTTOM" and self.location[3] is False)):
+        #if package is on bottom and "TOP" was requested do not render anything
+        if len(self.location) == 4 and (side == "TOP" and self.location[3]):
+            return
+        #if package is on top and "BOT" was requested do not render anything
+        if len(self.location) == 4 and (side == "BOT" and not self.location[3]):
             return
 
         gfx.save()
@@ -273,12 +279,12 @@ class PCB(object):
 
         #flip image if bottom side is requested
         if side == "BOT":
-            fx = -1
-            fy = 1
-            cy = 0
-            cx = max_w/2 + where[0]
-            mtrx = cairo.Matrix(-1,0,0,1,cx*(1-fx),cy*(fy-1))
-            gfx.transform (mtrx);
+            flip_x = -1
+            flip_y = 1
+            cen_y = 0
+            cen_x = max_w/2 + where[0]
+            mtrx = cairo.Matrix(-1, 0, 0, 1, cen_x*(1-flip_x), cen_y*(flip_y-1))
+            gfx.transform(mtrx)
 
 
         gfx.set_line_width(0.1)
@@ -864,7 +870,7 @@ def write_bom(elements, settings, pcb):
         write_part_list(elements, settings['out_filename'],
                         settings['set_delimiter'])
 
-    #remove side of PCB from the BOM since this is only relevant for 
+    #remove side of PCB from the BOM since this is only relevant for
     #stickerbom and would only lead to split BOM rows for type value
     for elem in elements:
         del elem["__SIDE"]
@@ -872,7 +878,7 @@ def write_bom(elements, settings, pcb):
     if settings['bom_type'] == 'value':
         write_value_list(elements, settings['out_filename'],
                          settings['set_delimiter'])
-    
+
 def bom_creation(settings):
     """this function reads the eagle XML and processes it to produce the
     bill of material
