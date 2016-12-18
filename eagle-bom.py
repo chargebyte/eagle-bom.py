@@ -866,14 +866,17 @@ def write_bom(elements, settings, pcb):
                 continue
     if settings['bom_type'] == 'sticker':
         write_sticker_list(elements, settings['out_filename'], pcb)
-    elif settings['bom_type'] == 'part':
-        write_part_list(elements, settings['out_filename'],
-                        settings['set_delimiter'])
 
     #remove side of PCB from the BOM since this is only relevant for
     #stickerbom and would only lead to split BOM rows for type value
     for elem in elements:
-        del elem["__SIDE"]
+        if "__SIDE" in elem: 
+            del elem["__SIDE"]
+
+    if settings['bom_type'] == 'part':
+        write_part_list(elements, settings['out_filename'],
+                        settings['set_delimiter'])
+
 
     if settings['bom_type'] == 'value':
         write_value_list(elements, settings['out_filename'],
