@@ -18,8 +18,17 @@ This scripts requires cairocffi. On Debian distributions, there exists no pre-pa
 version of this python module, so you have to install the python development environment
 and use pip to install this dependency:
 
+### Linux
+
     $ apt-get install python-dev libffi-dev python-pip
     $ pip install cairocffi
+
+### Windows
+
+    $ pip install cffi
+    $ pip install cairocffi
+	
+cairo / cairo-2 / cairo-gobject-2 dependencies can be solved by installing GTK+ from https://gtk-win.sourceforge.io/home/index.php/Main/Downloads followed by a restart of your machine.
 
 You can use eagle-bom.py as follows:
 ------------------------------------
